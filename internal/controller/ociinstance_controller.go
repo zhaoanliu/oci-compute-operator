@@ -190,7 +190,7 @@ func (r *OCIInstanceReconciler) reconcileNew(ctx context.Context, instance *comp
 	}
 
 	// Update status with the new instance ID
-	instance.Status.InstanceID = *response.Instance.Id
+	instance.Status.InstanceID = *response.Id
 	instance.Status.Phase = computev1alpha1.InstancePhaseProvisioning
 	instance.Status.ObservedGeneration = instance.Generation
 
