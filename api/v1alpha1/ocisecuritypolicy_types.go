@@ -1,11 +1,10 @@
 /*
 Copyright 2026.
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,45 +12,114 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
 package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+// SecurityRuleDirection defines whether a rule applies to ingress or egress traffic
+// +kubebuilder:validation:Enum=INGRESS;EGRESS
+type SecurityRuleDirection string
+
+const (
+	SecurityRuleDirectionIngress SecurityRuleDirection = "INGRESS"
+	SecurityRuleDirectionEgress  SecurityRuleDirection = "EGRESS"
+)
+
+// SecurityRule defines a single ingress or egress rule
+type SecurityRule struct {
+	// Description is a human-readable description of the rule.
+	// +optional
+	Description string `json:"description,omitempty"`
+
+	// Direction specifies whether this is an INGRESS or EGRESS rule.
+	// +kubebuilder:validation:Required
+	Direction SecurityRuleDirection `json:"direction"`
+
+	// Protocol is the IP protocol (e.g. "6" for TCP, "17" for UDP, "all" for all protocols).
+	// +kubebuilder:validation:Required
+	Protocol string `json:"protocol"`
+
+	// Source is the source CIDR for ingress rules (e.g. "0.0.0.0/0").
+	// +optional
+	Source string `json:"source,omitempty"`
+
+	// Destination is the destination CIDR for egress rules (e.g. "0.0.0.0/0").
+	// +optional
+	Destination string `json:"destination,omitempty"`
+
+	// MinPort is the minimum port number for the rule.
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	MinPort *int32 `json:"minPort,omitempty"`
+
+	// MaxPort is the maximum port number for the rule.
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	MaxPort *int32 `json:"maxPort,omitempty"`
+}
 
 // OCISecurityPolicySpec defines the desired state of OCISecurityPolicy
 type OCISecurityPolicySpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-	// The following markers will use OpenAPI v3 schema to validate the value
-	// More info: https://book.kubebuilder.io/reference/markers/crd-validation.html
+	// CompartmentID is the OCID of the compartment containing the security list.
+	// +kubebuilder:validation:Required
+	CompartmentID string `json:"compartmentId"`
 
-	// foo is an example field of OCISecurityPolicy. Edit ocisecuritypolicy_types.go to remove/update
+	// VcnID is the OCID of the VCN that owns the security list.
+	// +kubebuilder:validation:Required
+	VcnID string `json:"vcnId"`
+
+	// DisplayName is the human-readable name for the security list.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=255
+	DisplayName string `json:"displayName"`
+
+	// Rules is the list of security rules to apply.
+	// +kubebuilder:validation:MinItems=1
+	Rules []SecurityRule `json:"rules"`
+
+	// FreeformTags are key-value pairs you can attach to the security list.
 	// +optional
-	Foo *string `json:"foo,omitempty"`
+	FreeformTags map[string]string `json:"freeformTags,omitempty"`
 }
 
-// OCISecurityPolicyStatus defines the observed state of OCISecurityPolicy.
+// SecurityPolicyPhase represents the lifecycle phase of the security policy
+// +kubebuilder:validation:Enum=Pending;Creating;Active;Updating;Deleting;Deleted;Failed
+type SecurityPolicyPhase string
+
+const (
+	SecurityPolicyPhasePending  SecurityPolicyPhase = "Pending"
+	SecurityPolicyPhaseCreating SecurityPolicyPhase = "Creating"
+	SecurityPolicyPhaseActive   SecurityPolicyPhase = "Active"
+	SecurityPolicyPhaseUpdating SecurityPolicyPhase = "Updating"
+	SecurityPolicyPhaseDeleting SecurityPolicyPhase = "Deleting"
+	SecurityPolicyPhaseDeleted  SecurityPolicyPhase = "Deleted"
+	SecurityPolicyPhaseFailed   SecurityPolicyPhase = "Failed"
+)
+
+// OCISecurityPolicyStatus defines the observed state of OCISecurityPolicy
 type OCISecurityPolicyStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// SecurityListID is the OCID of the provisioned OCI security list.
+	// +optional
+	SecurityListID string `json:"securityListId,omitempty"`
 
-	// For Kubernetes API conventions, see:
-	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
+	// Phase represents the current lifecycle phase of the security policy.
+	// +optional
+	Phase SecurityPolicyPhase `json:"phase,omitempty"`
 
-	// conditions represent the current state of the OCISecurityPolicy resource.
-	// Each condition has a unique type and reflects the status of a specific aspect of the resource.
-	//
-	// Standard condition types include:
-	// - "Available": the resource is fully functional
-	// - "Progressing": the resource is being created or updated
-	// - "Degraded": the resource failed to reach or maintain its desired state
-	//
-	// The status of each condition is one of True, False, or Unknown.
+	// FailureReason contains the error message if the policy failed.
+	// +optional
+	FailureReason string `json:"failureReason,omitempty"`
+
+	// ObservedGeneration is the last generation reconciled by the controller.
+	// +optional
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
+	// Conditions represent the current state of the OCISecurityPolicy resource.
 	// +listType=map
 	// +listMapKey=type
 	// +optional
@@ -60,22 +128,17 @@ type OCISecurityPolicyStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Phase",type="string",JSONPath=".status.phase"
+// +kubebuilder:printcolumn:name="SecurityListID",type="string",JSONPath=".status.securityListId"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // OCISecurityPolicy is the Schema for the ocisecuritypolicies API
 type OCISecurityPolicy struct {
-	metav1.TypeMeta `json:",inline"`
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	// metadata is a standard object metadata
-	// +optional
-	metav1.ObjectMeta `json:"metadata,omitzero"`
-
-	// spec defines the desired state of OCISecurityPolicy
-	// +required
-	Spec OCISecurityPolicySpec `json:"spec"`
-
-	// status defines the observed state of OCISecurityPolicy
-	// +optional
-	Status OCISecurityPolicyStatus `json:"status,omitzero"`
+	Spec   OCISecurityPolicySpec   `json:"spec,omitempty"`
+	Status OCISecurityPolicyStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -83,7 +146,7 @@ type OCISecurityPolicy struct {
 // OCISecurityPolicyList contains a list of OCISecurityPolicy
 type OCISecurityPolicyList struct {
 	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitzero"`
+	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []OCISecurityPolicy `json:"items"`
 }
 

@@ -14,7 +14,17 @@ spec:
     singular: ocisecuritypolicy
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .status.phase
+      name: Phase
+      type: string
+    - jsonPath: .status.securityListId
+      name: SecurityListID
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: OCISecurityPolicy is the Schema for the ocisecuritypolicies API
@@ -37,27 +47,85 @@ spec:
           metadata:
             type: object
           spec:
-            description: spec defines the desired state of OCISecurityPolicy
+            description: OCISecurityPolicySpec defines the desired state of OCISecurityPolicy
             properties:
-              foo:
-                description: foo is an example field of OCISecurityPolicy. Edit ocisecuritypolicy_types.go
-                  to remove/update
+              compartmentId:
+                description: CompartmentID is the OCID of the compartment containing
+                  the security list.
                 type: string
+              displayName:
+                description: DisplayName is the human-readable name for the security
+                  list.
+                maxLength: 255
+                minLength: 1
+                type: string
+              freeformTags:
+                additionalProperties:
+                  type: string
+                description: FreeformTags are key-value pairs you can attach to the
+                  security list.
+                type: object
+              rules:
+                description: Rules is the list of security rules to apply.
+                items:
+                  description: SecurityRule defines a single ingress or egress rule
+                  properties:
+                    description:
+                      description: Description is a human-readable description of
+                        the rule.
+                      type: string
+                    destination:
+                      description: Destination is the destination CIDR for egress
+                        rules (e.g. "0.0.0.0/0").
+                      type: string
+                    direction:
+                      description: Direction specifies whether this is an INGRESS
+                        or EGRESS rule.
+                      enum:
+                      - INGRESS
+                      - EGRESS
+                      type: string
+                    maxPort:
+                      description: MaxPort is the maximum port number for the rule.
+                      format: int32
+                      maximum: 65535
+                      minimum: 1
+                      type: integer
+                    minPort:
+                      description: MinPort is the minimum port number for the rule.
+                      format: int32
+                      maximum: 65535
+                      minimum: 1
+                      type: integer
+                    protocol:
+                      description: Protocol is the IP protocol (e.g. "6" for TCP,
+                        "17" for UDP, "all" for all protocols).
+                      type: string
+                    source:
+                      description: Source is the source CIDR for ingress rules (e.g.
+                        "0.0.0.0/0").
+                      type: string
+                  required:
+                  - direction
+                  - protocol
+                  type: object
+                minItems: 1
+                type: array
+              vcnId:
+                description: VcnID is the OCID of the VCN that owns the security list.
+                type: string
+            required:
+            - compartmentId
+            - displayName
+            - rules
+            - vcnId
             type: object
           status:
-            description: status defines the observed state of OCISecurityPolicy
+            description: OCISecurityPolicyStatus defines the observed state of OCISecurityPolicy
             properties:
               conditions:
-                description: |-
-                  conditions represent the current state of the OCISecurityPolicy resource.
-                  Each condition has a unique type and reflects the status of a specific aspect of the resource.
-
-                  Standard condition types include:
-                  - "Available": the resource is fully functional
-                  - "Progressing": the resource is being created or updated
-                  - "Degraded": the resource failed to reach or maintain its desired state
-
-                  The status of each condition is one of True, False, or Unknown.
+                description: Conditions represent the current state of the OCISecurityPolicy
+                  resource.
                 items:
                   description: Condition contains details for one aspect of the current
                     state of this API Resource.
@@ -116,9 +184,32 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              failureReason:
+                description: FailureReason contains the error message if the policy
+                  failed.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the last generation reconciled
+                  by the controller.
+                format: int64
+                type: integer
+              phase:
+                description: Phase represents the current lifecycle phase of the security
+                  policy.
+                enum:
+                - Pending
+                - Creating
+                - Active
+                - Updating
+                - Deleting
+                - Deleted
+                - Failed
+                type: string
+              securityListId:
+                description: SecurityListID is the OCID of the provisioned OCI security
+                  list.
+                type: string
             type: object
-        required:
-        - spec
         type: object
     served: true
     storage: true
