@@ -1,11 +1,10 @@
 /*
 Copyright 2026.
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,14 +12,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
 package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // OCIInstanceSpec defines the desired state of OCIInstance
@@ -30,12 +27,70 @@ type OCIInstanceSpec struct {
 	// The following markers will use OpenAPI v3 schema to validate the value
 	// More info: https://book.kubebuilder.io/reference/markers/crd-validation.html
 
-	// foo is an example field of OCIInstance. Edit ociinstance_types.go to remove/update
+	// CompartmentID is the OCID of the compartment where the instance will be created.
+	// +kubebuilder:validation:Required
+	CompartmentID string `json:"compartmentId"`
+
+	// DisplayName is the human-readable name for the OCI instance.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=255
+	DisplayName string `json:"displayName"`
+
+	// Shape is the OCI compute shape (e.g. "VM.Standard.E4.Flex").
+	// +kubebuilder:validation:Required
+	Shape string `json:"shape"`
+
+	// ImageID is the OCID of the image to use for the instance.
+	// +kubebuilder:validation:Required
+	ImageID string `json:"imageId"`
+
+	// AvailabilityDomain is the AD where the instance will be placed.
+	// +kubebuilder:validation:Required
+	AvailabilityDomain string `json:"availabilityDomain"`
+
+	// SubnetID is the OCID of the subnet to attach the instance to.
+	// +kubebuilder:validation:Required
+	SubnetID string `json:"subnetId"`
+
+	// OCPUs is the number of OCPUs for flex shapes, serialized as string (e.g. "4").
 	// +optional
-	Foo *string `json:"foo,omitempty"`
+	OCPUs *string `json:"ocpus,omitempty"`
+
+	// MemoryInGBs is the amount of memory in GBs for flex shapes, serialized as string (e.g. "64").
+	// +optional
+	MemoryInGBs *string `json:"memoryInGBs,omitempty"`
+
+	// FreeformTags are key-value pairs you can attach to the instance.
+	// +optional
+	FreeformTags map[string]string `json:"freeformTags,omitempty"`
 }
 
-// OCIInstanceStatus defines the observed state of OCIInstance.
+// InstancePhase represents the lifecycle phase of the OCI instance
+// +kubebuilder:validation:Enum=Pending;Provisioning;Running;Terminating;Terminated;Failed
+type InstancePhase string
+
+const (
+	// InstancePhasePending means the request has been received but not yet acted on
+	InstancePhasePending InstancePhase = "Pending"
+
+	// InstancePhaseProvisioning means OCI is creating the instance
+	InstancePhaseProvisioning InstancePhase = "Provisioning"
+
+	// InstancePhaseRunning means the instance is up and running
+	InstancePhaseRunning InstancePhase = "Running"
+
+	// InstancePhaseTerminating means the instance is being deleted
+	InstancePhaseTerminating InstancePhase = "Terminating"
+
+	// InstancePhaseTerminated means the instance has been deleted
+	InstancePhaseTerminated InstancePhase = "Terminated"
+
+	// InstancePhaseFailed means something went wrong
+	InstancePhaseFailed InstancePhase = "Failed"
+)
+
+// OCIInstanceStatus defines the observed state of OCIInstance
 type OCIInstanceStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
@@ -52,6 +107,32 @@ type OCIInstanceStatus struct {
 	// - "Degraded": the resource failed to reach or maintain its desired state
 	//
 	// The status of each condition is one of True, False, or Unknown.
+
+	// InstanceID is the OCID of the provisioned OCI instance.
+	// +optional
+	InstanceID string `json:"instanceId,omitempty"`
+
+	// Phase represents the current lifecycle phase of the instance.
+	// +optional
+	Phase InstancePhase `json:"phase,omitempty"`
+
+	// PrivateIP is the private IP address assigned to the instance.
+	// +optional
+	PrivateIP string `json:"privateIp,omitempty"`
+
+	// PublicIP is the public IP address assigned to the instance, if any.
+	// +optional
+	PublicIP string `json:"publicIp,omitempty"`
+
+	// FailureReason contains the error message if the instance failed.
+	// +optional
+	FailureReason string `json:"failureReason,omitempty"`
+
+	// ObservedGeneration is the last generation reconciled by the controller.
+	// +optional
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
+	// Conditions represent the current state of the OCIInstance resource.
 	// +listType=map
 	// +listMapKey=type
 	// +optional
@@ -60,22 +141,18 @@ type OCIInstanceStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Phase",type="string",JSONPath=".status.phase"
+// +kubebuilder:printcolumn:name="InstanceID",type="string",JSONPath=".status.instanceId"
+// +kubebuilder:printcolumn:name="PrivateIP",type="string",JSONPath=".status.privateIp"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // OCIInstance is the Schema for the ociinstances API
 type OCIInstance struct {
-	metav1.TypeMeta `json:",inline"`
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	// metadata is a standard object metadata
-	// +optional
-	metav1.ObjectMeta `json:"metadata,omitzero"`
-
-	// spec defines the desired state of OCIInstance
-	// +required
-	Spec OCIInstanceSpec `json:"spec"`
-
-	// status defines the observed state of OCIInstance
-	// +optional
-	Status OCIInstanceStatus `json:"status,omitzero"`
+	Spec   OCIInstanceSpec   `json:"spec,omitempty"`
+	Status OCIInstanceStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -83,7 +160,7 @@ type OCIInstance struct {
 // OCIInstanceList contains a list of OCIInstance
 type OCIInstanceList struct {
 	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitzero"`
+	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []OCIInstance `json:"items"`
 }
 

@@ -14,7 +14,20 @@ spec:
     singular: ociinstance
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .status.phase
+      name: Phase
+      type: string
+    - jsonPath: .status.instanceId
+      name: InstanceID
+      type: string
+    - jsonPath: .status.privateIp
+      name: PrivateIP
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: OCIInstance is the Schema for the ociinstances API
@@ -37,27 +50,59 @@ spec:
           metadata:
             type: object
           spec:
-            description: spec defines the desired state of OCIInstance
+            description: OCIInstanceSpec defines the desired state of OCIInstance
             properties:
-              foo:
-                description: foo is an example field of OCIInstance. Edit ociinstance_types.go
-                  to remove/update
+              availabilityDomain:
+                description: AvailabilityDomain is the AD where the instance will
+                  be placed.
                 type: string
+              compartmentId:
+                description: CompartmentID is the OCID of the compartment where the
+                  instance will be created.
+                type: string
+              displayName:
+                description: DisplayName is the human-readable name for the OCI instance.
+                maxLength: 255
+                minLength: 1
+                type: string
+              freeformTags:
+                additionalProperties:
+                  type: string
+                description: FreeformTags are key-value pairs you can attach to the
+                  instance.
+                type: object
+              imageId:
+                description: ImageID is the OCID of the image to use for the instance.
+                type: string
+              memoryInGBs:
+                description: MemoryInGBs is the amount of memory in GBs for flex shapes,
+                  serialized as string (e.g. "64").
+                type: string
+              ocpus:
+                description: OCPUs is the number of OCPUs for flex shapes, serialized
+                  as string (e.g. "4").
+                type: string
+              shape:
+                description: Shape is the OCI compute shape (e.g. "VM.Standard.E4.Flex").
+                type: string
+              subnetId:
+                description: SubnetID is the OCID of the subnet to attach the instance
+                  to.
+                type: string
+            required:
+            - availabilityDomain
+            - compartmentId
+            - displayName
+            - imageId
+            - shape
+            - subnetId
             type: object
           status:
-            description: status defines the observed state of OCIInstance
+            description: OCIInstanceStatus defines the observed state of OCIInstance
             properties:
               conditions:
-                description: |-
-                  conditions represent the current state of the OCIInstance resource.
-                  Each condition has a unique type and reflects the status of a specific aspect of the resource.
-
-                  Standard condition types include:
-                  - "Available": the resource is fully functional
-                  - "Progressing": the resource is being created or updated
-                  - "Degraded": the resource failed to reach or maintain its desired state
-
-                  The status of each condition is one of True, False, or Unknown.
+                description: Conditions represent the current state of the OCIInstance
+                  resource.
                 items:
                   description: Condition contains details for one aspect of the current
                     state of this API Resource.
@@ -116,9 +161,36 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              failureReason:
+                description: FailureReason contains the error message if the instance
+                  failed.
+                type: string
+              instanceId:
+                description: InstanceID is the OCID of the provisioned OCI instance.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the last generation reconciled
+                  by the controller.
+                format: int64
+                type: integer
+              phase:
+                description: Phase represents the current lifecycle phase of the instance.
+                enum:
+                - Pending
+                - Provisioning
+                - Running
+                - Terminating
+                - Terminated
+                - Failed
+                type: string
+              privateIp:
+                description: PrivateIP is the private IP address assigned to the instance.
+                type: string
+              publicIp:
+                description: PublicIP is the public IP address assigned to the instance,
+                  if any.
+                type: string
             type: object
-        required:
-        - spec
         type: object
     served: true
     storage: true
