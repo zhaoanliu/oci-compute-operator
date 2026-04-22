@@ -1,0 +1,9 @@
+apiVersion: compute.nvcne-demo.io/v1alpha1
+kind: OCISecurityPolicy
+metadata:
+  labels:
+    app.kubernetes.io/name: oci-compute-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: ocisecuritypolicy-sample
+spec:
+  # TODO(user): Add fields here

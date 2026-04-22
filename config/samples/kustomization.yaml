@@ -1,0 +1,5 @@
+## Append samples of your project ##
+resources:
+- compute_v1alpha1_ociinstance.yaml
+- compute_v1alpha1_ocisecuritypolicy.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples
