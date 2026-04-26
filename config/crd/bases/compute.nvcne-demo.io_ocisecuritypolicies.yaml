@@ -52,6 +52,8 @@ spec:
               compartmentId:
                 description: CompartmentID is the OCID of the compartment containing
                   the security list.
+                maxLength: 255
+                minLength: 1
                 type: string
               displayName:
                 description: DisplayName is the human-readable name for the security
@@ -113,6 +115,8 @@ spec:
                 type: array
               vcnId:
                 description: VcnID is the OCID of the VCN that owns the security list.
+                maxLength: 255
+                minLength: 1
                 type: string
             required:
             - compartmentId

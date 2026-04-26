@@ -66,10 +66,14 @@ type SecurityRule struct {
 type OCISecurityPolicySpec struct {
 	// CompartmentID is the OCID of the compartment containing the security list.
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=255
 	CompartmentID string `json:"compartmentId"`
 
 	// VcnID is the OCID of the VCN that owns the security list.
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=255
 	VcnID string `json:"vcnId"`
 
 	// DisplayName is the human-readable name for the security list.
