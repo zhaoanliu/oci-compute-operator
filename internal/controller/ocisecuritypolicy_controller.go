@@ -82,6 +82,13 @@ func (r *OCISecurityPolicyReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		return ctrl.Result{}, nil
 	}
 
+	// If already failed, stop retrying unless spec changed
+	if policy.Status.Phase == computev1alpha1.SecurityPolicyPhaseFailed &&
+		policy.Status.ObservedGeneration == policy.Generation {
+		log.Info("OCISecurityPolicy is in Failed phase, not retrying until spec changes")
+		return ctrl.Result{}, nil
+	}
+
 	// Step 4: Create OCI virtual network client
 	vcnClient, err := r.newVirtualNetworkClient()
 	if err != nil {
@@ -277,9 +284,19 @@ func (r *OCISecurityPolicyReconciler) convertRules(rules []computev1alpha1.Secur
 // setFailedStatus updates the policy status to Failed with a reason
 func (r *OCISecurityPolicyReconciler) setFailedStatus(ctx context.Context, policy *computev1alpha1.OCISecurityPolicy, reason string) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
-	policy.Status.Phase = computev1alpha1.SecurityPolicyPhaseFailed
-	policy.Status.FailureReason = reason
-	if err := r.Status().Update(ctx, policy); err != nil {
+
+	// Re-fetch the latest version to avoid conflict errors
+	latest := &computev1alpha1.OCISecurityPolicy{}
+	if err := r.Get(ctx, client.ObjectKeyFromObject(policy), latest); err != nil {
+		log.Error(err, "Failed to re-fetch policy before setting failed status")
+		return ctrl.Result{}, err
+	}
+
+	latest.Status.Phase = computev1alpha1.SecurityPolicyPhaseFailed
+	latest.Status.FailureReason = reason
+	latest.Status.ObservedGeneration = latest.Generation
+
+	if err := r.Status().Update(ctx, latest); err != nil {
 		log.Error(err, "Failed to update failure status")
 		return ctrl.Result{}, err
 	}

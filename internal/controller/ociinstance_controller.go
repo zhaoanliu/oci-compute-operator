@@ -17,6 +17,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -81,6 +82,13 @@ func (r *OCIInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			return ctrl.Result{}, err
 		}
 		// Return here - the Update will trigger another reconcile
+		return ctrl.Result{}, nil
+	}
+
+	// If already failed, stop retrying unless spec changed
+	if instance.Status.Phase == computev1alpha1.InstancePhaseFailed &&
+		instance.Status.ObservedGeneration == instance.Generation {
+		log.Info("OCIInstance is in Failed phase, not retrying until spec changes")
 		return ctrl.Result{}, nil
 	}
 
@@ -165,14 +173,17 @@ func (r *OCIInstanceReconciler) reconcileNew(ctx context.Context, instance *comp
 		},
 	}
 
-	// Add flex shape config if OCPUs or memory specified
-	if instance.Spec.OCPUs != nil || instance.Spec.MemoryInGBs != nil {
-		shapeConfig := core.LaunchInstanceShapeConfigDetails{}
-		if instance.Spec.OCPUs != nil {
-			ocpus := float32(32) // default
-			shapeConfig.Ocpus = &ocpus
+	// Add flex shape config if both OCPUs and MemoryInGBs are specified
+	// OCI requires both fields together for flex shapes
+	if instance.Spec.OCPUs != nil && instance.Spec.MemoryInGBs != nil {
+		ocpus, _ := strconv.ParseFloat(*instance.Spec.OCPUs, 32)
+		memoryInGBs, _ := strconv.ParseFloat(*instance.Spec.MemoryInGBs, 32)
+		ocpusFloat := float32(ocpus)
+		memoryFloat := float32(memoryInGBs)
+		launchDetails.ShapeConfig = &core.LaunchInstanceShapeConfigDetails{
+			Ocpus:       &ocpusFloat,
+			MemoryInGBs: &memoryFloat,
 		}
-		launchDetails.ShapeConfig = &shapeConfig
 	}
 
 	// Add freeform tags if specified
@@ -261,9 +272,19 @@ func (r *OCIInstanceReconciler) reconcileExisting(ctx context.Context, instance 
 // setFailedStatus updates the instance status to Failed with a reason
 func (r *OCIInstanceReconciler) setFailedStatus(ctx context.Context, instance *computev1alpha1.OCIInstance, reason string) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
-	instance.Status.Phase = computev1alpha1.InstancePhaseFailed
-	instance.Status.FailureReason = reason
-	if err := r.Status().Update(ctx, instance); err != nil {
+
+	// Re-fetch the latest version to avoid conflict errors
+	latest := &computev1alpha1.OCIInstance{}
+	if err := r.Get(ctx, client.ObjectKeyFromObject(instance), latest); err != nil {
+		log.Error(err, "Failed to re-fetch instance before setting failed status")
+		return ctrl.Result{}, err
+	}
+
+	latest.Status.Phase = computev1alpha1.InstancePhaseFailed
+	latest.Status.FailureReason = reason
+	latest.Status.ObservedGeneration = latest.Generation
+
+	if err := r.Status().Update(ctx, latest); err != nil {
 		log.Error(err, "Failed to update failure status")
 		return ctrl.Result{}, err
 	}
