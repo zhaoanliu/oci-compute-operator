@@ -96,7 +96,7 @@ func (r *OCIInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	computeClient, err := r.newComputeClient()
 	if err != nil {
 		log.Error(err, "Failed to create OCI compute client")
-		return r.setFailedStatus(ctx, instance, fmt.Sprintf("Failed to create OCI client: %v", err))
+		return setFailedStatus(ctx, r.Client, instance, fmt.Sprintf("Failed to create OCI client: %v", err))
 	}
 
 	// Step 5: Check if OCI instance already exists
@@ -197,7 +197,7 @@ func (r *OCIInstanceReconciler) reconcileNew(ctx context.Context, instance *comp
 	})
 	if err != nil {
 		log.Error(err, "Failed to launch OCI instance")
-		return r.setFailedStatus(ctx, instance, fmt.Sprintf("Failed to launch instance: %v", err))
+		return setFailedStatus(ctx, r.Client, instance, fmt.Sprintf("Failed to launch instance: %v", err))
 	}
 
 	// Update status with the new instance ID
@@ -267,28 +267,6 @@ func (r *OCIInstanceReconciler) reconcileExisting(ctx context.Context, instance 
 	}
 
 	return ctrl.Result{RequeueAfter: requeueAfter}, nil
-}
-
-// setFailedStatus updates the instance status to Failed with a reason
-func (r *OCIInstanceReconciler) setFailedStatus(ctx context.Context, instance *computev1alpha1.OCIInstance, reason string) (ctrl.Result, error) {
-	log := logf.FromContext(ctx)
-
-	// Re-fetch the latest version to avoid conflict errors
-	latest := &computev1alpha1.OCIInstance{}
-	if err := r.Get(ctx, client.ObjectKeyFromObject(instance), latest); err != nil {
-		log.Error(err, "Failed to re-fetch instance before setting failed status")
-		return ctrl.Result{}, err
-	}
-
-	latest.Status.Phase = computev1alpha1.InstancePhaseFailed
-	latest.Status.FailureReason = reason
-	latest.Status.ObservedGeneration = latest.Generation
-
-	if err := r.Status().Update(ctx, latest); err != nil {
-		log.Error(err, "Failed to update failure status")
-		return ctrl.Result{}, err
-	}
-	return ctrl.Result{}, nil
 }
 
 // newComputeClient creates an OCI compute client using the default config provider

@@ -93,7 +93,7 @@ func (r *OCISecurityPolicyReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	vcnClient, err := r.newVirtualNetworkClient()
 	if err != nil {
 		log.Error(err, "Failed to create OCI VCN client")
-		return r.setFailedStatus(ctx, policy, fmt.Sprintf("Failed to create OCI client: %v", err))
+		return setFailedStatus(ctx, r.Client, policy, fmt.Sprintf("Failed to create OCI client: %v", err))
 	}
 
 	// Step 5: Check if security list already exists
@@ -173,7 +173,7 @@ func (r *OCISecurityPolicyReconciler) reconcileNew(ctx context.Context, policy *
 	})
 	if err != nil {
 		log.Error(err, "Failed to create OCI security list")
-		return r.setFailedStatus(ctx, policy, fmt.Sprintf("Failed to create security list: %v", err))
+		return setFailedStatus(ctx, r.Client, policy, fmt.Sprintf("Failed to create security list: %v", err))
 	}
 
 	// Update status with new security list ID
@@ -279,28 +279,6 @@ func (r *OCISecurityPolicyReconciler) convertRules(rules []computev1alpha1.Secur
 	}
 
 	return ingressRules, egressRules
-}
-
-// setFailedStatus updates the policy status to Failed with a reason
-func (r *OCISecurityPolicyReconciler) setFailedStatus(ctx context.Context, policy *computev1alpha1.OCISecurityPolicy, reason string) (ctrl.Result, error) {
-	log := logf.FromContext(ctx)
-
-	// Re-fetch the latest version to avoid conflict errors
-	latest := &computev1alpha1.OCISecurityPolicy{}
-	if err := r.Get(ctx, client.ObjectKeyFromObject(policy), latest); err != nil {
-		log.Error(err, "Failed to re-fetch policy before setting failed status")
-		return ctrl.Result{}, err
-	}
-
-	latest.Status.Phase = computev1alpha1.SecurityPolicyPhaseFailed
-	latest.Status.FailureReason = reason
-	latest.Status.ObservedGeneration = latest.Generation
-
-	if err := r.Status().Update(ctx, latest); err != nil {
-		log.Error(err, "Failed to update failure status")
-		return ctrl.Result{}, err
-	}
-	return ctrl.Result{}, nil
 }
 
 // newVirtualNetworkClient creates an OCI VCN client using the default config provider

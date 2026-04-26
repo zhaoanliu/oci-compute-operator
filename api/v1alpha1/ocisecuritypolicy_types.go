@@ -154,6 +154,17 @@ type OCISecurityPolicyList struct {
 	Items           []OCISecurityPolicy `json:"items"`
 }
 
+// SetFailedStatus sets the phase to Failed with the given reason.
+func (o *OCISecurityPolicy) SetFailedStatus(reason string) {
+	o.Status.Phase = SecurityPolicyPhaseFailed
+	o.Status.FailureReason = reason
+}
+
+// SetObservedGeneration sets the observed generation on the status.
+func (o *OCISecurityPolicy) SetObservedGeneration(generation int64) {
+	o.Status.ObservedGeneration = generation
+}
+
 func init() {
 	SchemeBuilder.Register(&OCISecurityPolicy{}, &OCISecurityPolicyList{})
 }

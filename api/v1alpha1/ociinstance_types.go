@@ -174,6 +174,17 @@ type OCIInstanceList struct {
 	Items           []OCIInstance `json:"items"`
 }
 
+// SetFailedStatus sets the phase to Failed with the given reason.
+func (o *OCIInstance) SetFailedStatus(reason string) {
+	o.Status.Phase = InstancePhaseFailed
+	o.Status.FailureReason = reason
+}
+
+// SetObservedGeneration sets the observed generation on the status.
+func (o *OCIInstance) SetObservedGeneration(generation int64) {
+	o.Status.ObservedGeneration = generation
+}
+
 func init() {
 	SchemeBuilder.Register(&OCIInstance{}, &OCIInstanceList{})
 }
