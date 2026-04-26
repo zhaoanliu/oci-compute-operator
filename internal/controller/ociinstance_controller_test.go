@@ -122,20 +122,110 @@ var _ = Describe("OCIInstance Controller", func() {
 	Context("When validating OCIInstance spec", func() {
 		It("should reject a resource with empty DisplayName", func() {
 			By("creating an OCIInstance with empty DisplayName")
-			invalid := newTestOCIInstance("invalid-resource", resourceNamespace)
+			invalid := newTestOCIInstance("invalid-display-name", resourceNamespace)
 			invalid.Spec.DisplayName = ""
 			err := k8sClient.Create(ctx, invalid)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("displayName"))
 		})
 
-		It("should reject a resource with missing CompartmentID", func() {
+		It("should reject a resource with DisplayName longer than 255 chars", func() {
+			By("creating an OCIInstance with DisplayName > 255 chars")
+			invalid := newTestOCIInstance("invalid-display-name-long", resourceNamespace)
+			invalid.Spec.DisplayName = string(make([]byte, 256))
+			err := k8sClient.Create(ctx, invalid)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("displayName"))
+		})
+
+		It("should reject a resource with empty CompartmentID", func() {
 			By("creating an OCIInstance with empty CompartmentID")
-			invalid := newTestOCIInstance("invalid-resource-2", resourceNamespace)
+			invalid := newTestOCIInstance("invalid-compartment-id", resourceNamespace)
 			invalid.Spec.CompartmentID = ""
 			err := k8sClient.Create(ctx, invalid)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("compartmentId"))
+		})
+
+		It("should reject a resource with CompartmentID longer than 255 chars", func() {
+			By("creating an OCIInstance with CompartmentID > 255 chars")
+			invalid := newTestOCIInstance("invalid-compartment-id-long", resourceNamespace)
+			invalid.Spec.CompartmentID = string(make([]byte, 256))
+			err := k8sClient.Create(ctx, invalid)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("compartmentId"))
+		})
+
+		It("should reject a resource with empty ImageID", func() {
+			By("creating an OCIInstance with empty ImageID")
+			invalid := newTestOCIInstance("invalid-image-id", resourceNamespace)
+			invalid.Spec.ImageID = ""
+			err := k8sClient.Create(ctx, invalid)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("imageId"))
+		})
+
+		It("should reject a resource with ImageID longer than 255 chars", func() {
+			By("creating an OCIInstance with ImageID > 255 chars")
+			invalid := newTestOCIInstance("invalid-image-id-long", resourceNamespace)
+			invalid.Spec.ImageID = string(make([]byte, 256))
+			err := k8sClient.Create(ctx, invalid)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("imageId"))
+		})
+
+		It("should reject a resource with empty SubnetID", func() {
+			By("creating an OCIInstance with empty SubnetID")
+			invalid := newTestOCIInstance("invalid-subnet-id", resourceNamespace)
+			invalid.Spec.SubnetID = ""
+			err := k8sClient.Create(ctx, invalid)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("subnetId"))
+		})
+
+		It("should reject a resource with SubnetID longer than 255 chars", func() {
+			By("creating an OCIInstance with SubnetID > 255 chars")
+			invalid := newTestOCIInstance("invalid-subnet-id-long", resourceNamespace)
+			invalid.Spec.SubnetID = string(make([]byte, 256))
+			err := k8sClient.Create(ctx, invalid)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("subnetId"))
+		})
+
+		It("should reject a resource with empty AvailabilityDomain", func() {
+			By("creating an OCIInstance with empty AvailabilityDomain")
+			invalid := newTestOCIInstance("invalid-ad", resourceNamespace)
+			invalid.Spec.AvailabilityDomain = ""
+			err := k8sClient.Create(ctx, invalid)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("availabilityDomain"))
+		})
+
+		It("should reject a resource with AvailabilityDomain longer than 255 chars", func() {
+			By("creating an OCIInstance with AvailabilityDomain > 255 chars")
+			invalid := newTestOCIInstance("invalid-ad-long", resourceNamespace)
+			invalid.Spec.AvailabilityDomain = string(make([]byte, 256))
+			err := k8sClient.Create(ctx, invalid)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("availabilityDomain"))
+		})
+
+		It("should reject a resource with empty Shape", func() {
+			By("creating an OCIInstance with empty Shape")
+			invalid := newTestOCIInstance("invalid-shape", resourceNamespace)
+			invalid.Spec.Shape = ""
+			err := k8sClient.Create(ctx, invalid)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("shape"))
+		})
+
+		It("should reject a resource with Shape longer than 255 chars", func() {
+			By("creating an OCIInstance with Shape > 255 chars")
+			invalid := newTestOCIInstance("invalid-shape-long", resourceNamespace)
+			invalid.Spec.Shape = string(make([]byte, 256))
+			err := k8sClient.Create(ctx, invalid)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("shape"))
 		})
 
 		It("should accept a resource with all required fields", func() {

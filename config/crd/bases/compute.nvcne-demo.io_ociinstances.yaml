@@ -55,10 +55,14 @@ spec:
               availabilityDomain:
                 description: AvailabilityDomain is the AD where the instance will
                   be placed.
+                maxLength: 255
+                minLength: 1
                 type: string
               compartmentId:
                 description: CompartmentID is the OCID of the compartment where the
                   instance will be created.
+                maxLength: 255
+                minLength: 1
                 type: string
               displayName:
                 description: DisplayName is the human-readable name for the OCI instance.
@@ -73,6 +77,8 @@ spec:
                 type: object
               imageId:
                 description: ImageID is the OCID of the image to use for the instance.
+                maxLength: 255
+                minLength: 1
                 type: string
               memoryInGBs:
                 description: MemoryInGBs is the amount of memory in GBs for flex shapes,
@@ -84,10 +90,14 @@ spec:
                 type: string
               shape:
                 description: Shape is the OCI compute shape (e.g. "VM.Standard.E4.Flex").
+                maxLength: 255
+                minLength: 1
                 type: string
               subnetId:
                 description: SubnetID is the OCID of the subnet to attach the instance
                   to.
+                maxLength: 255
+                minLength: 1
                 type: string
             required:
             - availabilityDomain

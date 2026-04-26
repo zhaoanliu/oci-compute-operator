@@ -29,6 +29,8 @@ type OCIInstanceSpec struct {
 
 	// CompartmentID is the OCID of the compartment where the instance will be created.
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=255
 	CompartmentID string `json:"compartmentId"`
 
 	// DisplayName is the human-readable name for the OCI instance.
@@ -39,18 +41,26 @@ type OCIInstanceSpec struct {
 
 	// Shape is the OCI compute shape (e.g. "VM.Standard.E4.Flex").
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=255
 	Shape string `json:"shape"`
 
 	// ImageID is the OCID of the image to use for the instance.
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=255
 	ImageID string `json:"imageId"`
 
 	// AvailabilityDomain is the AD where the instance will be placed.
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=255
 	AvailabilityDomain string `json:"availabilityDomain"`
 
 	// SubnetID is the OCID of the subnet to attach the instance to.
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=255
 	SubnetID string `json:"subnetId"`
 
 	// OCPUs is the number of OCPUs for flex shapes, serialized as string (e.g. "4").
