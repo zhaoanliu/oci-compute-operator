@@ -49,15 +49,14 @@ func newTestOCIInstance(name, namespace string) *computev1alpha1.OCIInstance {
 
 var _ = Describe("OCIInstance Controller", func() {
 	const (
-		resourceName      = "test-resource"
-		resourceNamespace = "default"
+		resourceName = "test-resource"
 	)
 
 	ctx := context.Background()
 
 	typeNamespacedName := types.NamespacedName{
 		Name:      resourceName,
-		Namespace: resourceNamespace,
+		Namespace: testNamespaceDefault,
 	}
 
 	// helper to build the reconciler
@@ -100,7 +99,7 @@ var _ = Describe("OCIInstance Controller", func() {
 			By("creating the OCIInstance resource")
 			err := k8sClient.Get(ctx, typeNamespacedName, &computev1alpha1.OCIInstance{})
 			if err != nil && errors.IsNotFound(err) {
-				Expect(k8sClient.Create(ctx, newTestOCIInstance(resourceName, resourceNamespace))).To(Succeed())
+				Expect(k8sClient.Create(ctx, newTestOCIInstance(resourceName, testNamespaceDefault))).To(Succeed())
 			}
 		})
 
@@ -122,7 +121,7 @@ var _ = Describe("OCIInstance Controller", func() {
 	Context("When validating OCIInstance spec", func() {
 		It("should reject a resource with empty DisplayName", func() {
 			By("creating an OCIInstance with empty DisplayName")
-			invalid := newTestOCIInstance("invalid-display-name", resourceNamespace)
+			invalid := newTestOCIInstance("invalid-display-name", testNamespaceValidation)
 			invalid.Spec.DisplayName = ""
 			err := k8sClient.Create(ctx, invalid)
 			Expect(err).To(HaveOccurred())
@@ -131,7 +130,7 @@ var _ = Describe("OCIInstance Controller", func() {
 
 		It("should reject a resource with DisplayName longer than 255 chars", func() {
 			By("creating an OCIInstance with DisplayName > 255 chars")
-			invalid := newTestOCIInstance("invalid-display-name-long", resourceNamespace)
+			invalid := newTestOCIInstance("invalid-display-name-long", testNamespaceValidation)
 			invalid.Spec.DisplayName = string(make([]byte, 256))
 			err := k8sClient.Create(ctx, invalid)
 			Expect(err).To(HaveOccurred())
@@ -140,7 +139,7 @@ var _ = Describe("OCIInstance Controller", func() {
 
 		It("should reject a resource with empty CompartmentID", func() {
 			By("creating an OCIInstance with empty CompartmentID")
-			invalid := newTestOCIInstance("invalid-compartment-id", resourceNamespace)
+			invalid := newTestOCIInstance("invalid-compartment-id", testNamespaceValidation)
 			invalid.Spec.CompartmentID = ""
 			err := k8sClient.Create(ctx, invalid)
 			Expect(err).To(HaveOccurred())
@@ -149,7 +148,7 @@ var _ = Describe("OCIInstance Controller", func() {
 
 		It("should reject a resource with CompartmentID longer than 255 chars", func() {
 			By("creating an OCIInstance with CompartmentID > 255 chars")
-			invalid := newTestOCIInstance("invalid-compartment-id-long", resourceNamespace)
+			invalid := newTestOCIInstance("invalid-compartment-id-long", testNamespaceValidation)
 			invalid.Spec.CompartmentID = string(make([]byte, 256))
 			err := k8sClient.Create(ctx, invalid)
 			Expect(err).To(HaveOccurred())
@@ -158,7 +157,7 @@ var _ = Describe("OCIInstance Controller", func() {
 
 		It("should reject a resource with empty ImageID", func() {
 			By("creating an OCIInstance with empty ImageID")
-			invalid := newTestOCIInstance("invalid-image-id", resourceNamespace)
+			invalid := newTestOCIInstance("invalid-image-id", testNamespaceValidation)
 			invalid.Spec.ImageID = ""
 			err := k8sClient.Create(ctx, invalid)
 			Expect(err).To(HaveOccurred())
@@ -167,7 +166,7 @@ var _ = Describe("OCIInstance Controller", func() {
 
 		It("should reject a resource with ImageID longer than 255 chars", func() {
 			By("creating an OCIInstance with ImageID > 255 chars")
-			invalid := newTestOCIInstance("invalid-image-id-long", resourceNamespace)
+			invalid := newTestOCIInstance("invalid-image-id-long", testNamespaceValidation)
 			invalid.Spec.ImageID = string(make([]byte, 256))
 			err := k8sClient.Create(ctx, invalid)
 			Expect(err).To(HaveOccurred())
@@ -176,7 +175,7 @@ var _ = Describe("OCIInstance Controller", func() {
 
 		It("should reject a resource with empty SubnetID", func() {
 			By("creating an OCIInstance with empty SubnetID")
-			invalid := newTestOCIInstance("invalid-subnet-id", resourceNamespace)
+			invalid := newTestOCIInstance("invalid-subnet-id", testNamespaceValidation)
 			invalid.Spec.SubnetID = ""
 			err := k8sClient.Create(ctx, invalid)
 			Expect(err).To(HaveOccurred())
@@ -185,7 +184,7 @@ var _ = Describe("OCIInstance Controller", func() {
 
 		It("should reject a resource with SubnetID longer than 255 chars", func() {
 			By("creating an OCIInstance with SubnetID > 255 chars")
-			invalid := newTestOCIInstance("invalid-subnet-id-long", resourceNamespace)
+			invalid := newTestOCIInstance("invalid-subnet-id-long", testNamespaceValidation)
 			invalid.Spec.SubnetID = string(make([]byte, 256))
 			err := k8sClient.Create(ctx, invalid)
 			Expect(err).To(HaveOccurred())
@@ -194,7 +193,7 @@ var _ = Describe("OCIInstance Controller", func() {
 
 		It("should reject a resource with empty AvailabilityDomain", func() {
 			By("creating an OCIInstance with empty AvailabilityDomain")
-			invalid := newTestOCIInstance("invalid-ad", resourceNamespace)
+			invalid := newTestOCIInstance("invalid-ad", testNamespaceValidation)
 			invalid.Spec.AvailabilityDomain = ""
 			err := k8sClient.Create(ctx, invalid)
 			Expect(err).To(HaveOccurred())
@@ -203,7 +202,7 @@ var _ = Describe("OCIInstance Controller", func() {
 
 		It("should reject a resource with AvailabilityDomain longer than 255 chars", func() {
 			By("creating an OCIInstance with AvailabilityDomain > 255 chars")
-			invalid := newTestOCIInstance("invalid-ad-long", resourceNamespace)
+			invalid := newTestOCIInstance("invalid-ad-long", testNamespaceValidation)
 			invalid.Spec.AvailabilityDomain = string(make([]byte, 256))
 			err := k8sClient.Create(ctx, invalid)
 			Expect(err).To(HaveOccurred())
@@ -212,7 +211,7 @@ var _ = Describe("OCIInstance Controller", func() {
 
 		It("should reject a resource with empty Shape", func() {
 			By("creating an OCIInstance with empty Shape")
-			invalid := newTestOCIInstance("invalid-shape", resourceNamespace)
+			invalid := newTestOCIInstance("invalid-shape", testNamespaceValidation)
 			invalid.Spec.Shape = ""
 			err := k8sClient.Create(ctx, invalid)
 			Expect(err).To(HaveOccurred())
@@ -221,7 +220,7 @@ var _ = Describe("OCIInstance Controller", func() {
 
 		It("should reject a resource with Shape longer than 255 chars", func() {
 			By("creating an OCIInstance with Shape > 255 chars")
-			invalid := newTestOCIInstance("invalid-shape-long", resourceNamespace)
+			invalid := newTestOCIInstance("invalid-shape-long", testNamespaceValidation)
 			invalid.Spec.Shape = string(make([]byte, 256))
 			err := k8sClient.Create(ctx, invalid)
 			Expect(err).To(HaveOccurred())
@@ -230,7 +229,7 @@ var _ = Describe("OCIInstance Controller", func() {
 
 		It("should accept a resource with all required fields", func() {
 			By("creating a valid OCIInstance")
-			valid := newTestOCIInstance("valid-resource", resourceNamespace)
+			valid := newTestOCIInstance("valid-resource", testNamespaceValidation)
 			Expect(k8sClient.Create(ctx, valid)).To(Succeed())
 
 			By("cleaning up")
@@ -239,7 +238,7 @@ var _ = Describe("OCIInstance Controller", func() {
 
 		It("should accept optional freeform tags", func() {
 			By("creating an OCIInstance with freeform tags")
-			tagged := newTestOCIInstance("tagged-resource", resourceNamespace)
+			tagged := newTestOCIInstance("tagged-resource", testNamespaceTags)
 			tagged.Spec.FreeformTags = map[string]string{
 				"env":  "test",
 				"team": "nvcne",
@@ -256,7 +255,7 @@ var _ = Describe("OCIInstance Controller", func() {
 			By("creating the OCIInstance resource")
 			err := k8sClient.Get(ctx, typeNamespacedName, &computev1alpha1.OCIInstance{})
 			if err != nil && errors.IsNotFound(err) {
-				Expect(k8sClient.Create(ctx, newTestOCIInstance(resourceName, resourceNamespace))).To(Succeed())
+				Expect(k8sClient.Create(ctx, newTestOCIInstance(resourceName, testNamespaceDefault))).To(Succeed())
 			}
 
 			By("running first reconcile to add finalizer")
