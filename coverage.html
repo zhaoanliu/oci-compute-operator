@@ -1,0 +1,1951 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>v1alpha1: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/zhaoanliu/oci-compute-operator/api/v1alpha1/ociinstance_types.go (0.0%)</option>
+				
+				<option value="file1">github.com/zhaoanliu/oci-compute-operator/api/v1alpha1/ocisecuritypolicy_types.go (0.0%)</option>
+				
+				<option value="file2">github.com/zhaoanliu/oci-compute-operator/api/v1alpha1/zz_generated.deepcopy.go (0.0%)</option>
+				
+				<option value="file3">github.com/zhaoanliu/oci-compute-operator/cmd/main.go (0.0%)</option>
+				
+				<option value="file4">github.com/zhaoanliu/oci-compute-operator/internal/controller/failable_resource.go (60.0%)</option>
+				
+				<option value="file5">github.com/zhaoanliu/oci-compute-operator/internal/controller/mock_oci_clients.go (66.7%)</option>
+				
+				<option value="file6">github.com/zhaoanliu/oci-compute-operator/internal/controller/ociinstance_controller.go (70.6%)</option>
+				
+				<option value="file7">github.com/zhaoanliu/oci-compute-operator/internal/controller/ocisecuritypolicy_controller.go (63.8%)</option>
+				
+				<option value="file8">github.com/zhaoanliu/oci-compute-operator/test/utils/utils.go (0.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">/*
+Copyright 2026.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+package v1alpha1
+
+import (
+        metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+
+// OCIInstanceSpec defines the desired state of OCIInstance
+type OCIInstanceSpec struct {
+        // INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+        // Important: Run "make" to regenerate code after modifying this file
+        // The following markers will use OpenAPI v3 schema to validate the value
+        // More info: https://book.kubebuilder.io/reference/markers/crd-validation.html
+
+        // CompartmentID is the OCID of the compartment where the instance will be created.
+        // +kubebuilder:validation:Required
+        // +kubebuilder:validation:MinLength=1
+        // +kubebuilder:validation:MaxLength=255
+        CompartmentID string `json:"compartmentId"`
+
+        // DisplayName is the human-readable name for the OCI instance.
+        // +kubebuilder:validation:Required
+        // +kubebuilder:validation:MinLength=1
+        // +kubebuilder:validation:MaxLength=255
+        DisplayName string `json:"displayName"`
+
+        // Shape is the OCI compute shape (e.g. "VM.Standard.E4.Flex").
+        // +kubebuilder:validation:Required
+        // +kubebuilder:validation:MinLength=1
+        // +kubebuilder:validation:MaxLength=255
+        Shape string `json:"shape"`
+
+        // ImageID is the OCID of the image to use for the instance.
+        // +kubebuilder:validation:Required
+        // +kubebuilder:validation:MinLength=1
+        // +kubebuilder:validation:MaxLength=255
+        ImageID string `json:"imageId"`
+
+        // AvailabilityDomain is the AD where the instance will be placed.
+        // +kubebuilder:validation:Required
+        // +kubebuilder:validation:MinLength=1
+        // +kubebuilder:validation:MaxLength=255
+        AvailabilityDomain string `json:"availabilityDomain"`
+
+        // SubnetID is the OCID of the subnet to attach the instance to.
+        // +kubebuilder:validation:Required
+        // +kubebuilder:validation:MinLength=1
+        // +kubebuilder:validation:MaxLength=255
+        SubnetID string `json:"subnetId"`
+
+        // OCPUs is the number of OCPUs for flex shapes, serialized as string (e.g. "4").
+        // +optional
+        OCPUs *string `json:"ocpus,omitempty"`
+
+        // MemoryInGBs is the amount of memory in GBs for flex shapes, serialized as string (e.g. "64").
+        // +optional
+        MemoryInGBs *string `json:"memoryInGBs,omitempty"`
+
+        // FreeformTags are key-value pairs you can attach to the instance.
+        // +optional
+        FreeformTags map[string]string `json:"freeformTags,omitempty"`
+}
+
+// InstancePhase represents the lifecycle phase of the OCI instance
+// +kubebuilder:validation:Enum=Pending;Provisioning;Running;Terminating;Terminated;Failed
+type InstancePhase string
+
+const (
+        // InstancePhasePending means the request has been received but not yet acted on
+        InstancePhasePending InstancePhase = "Pending"
+
+        // InstancePhaseProvisioning means OCI is creating the instance
+        InstancePhaseProvisioning InstancePhase = "Provisioning"
+
+        // InstancePhaseRunning means the instance is up and running
+        InstancePhaseRunning InstancePhase = "Running"
+
+        // InstancePhaseTerminating means the instance is being deleted
+        InstancePhaseTerminating InstancePhase = "Terminating"
+
+        // InstancePhaseTerminated means the instance has been deleted
+        InstancePhaseTerminated InstancePhase = "Terminated"
+
+        // InstancePhaseFailed means something went wrong
+        InstancePhaseFailed InstancePhase = "Failed"
+)
+
+// OCIInstanceStatus defines the observed state of OCIInstance
+type OCIInstanceStatus struct {
+        // INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+        // Important: Run "make" to regenerate code after modifying this file
+
+        // For Kubernetes API conventions, see:
+        // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
+
+        // conditions represent the current state of the OCIInstance resource.
+        // Each condition has a unique type and reflects the status of a specific aspect of the resource.
+        //
+        // Standard condition types include:
+        // - "Available": the resource is fully functional
+        // - "Progressing": the resource is being created or updated
+        // - "Degraded": the resource failed to reach or maintain its desired state
+        //
+        // The status of each condition is one of True, False, or Unknown.
+
+        // InstanceID is the OCID of the provisioned OCI instance.
+        // +optional
+        InstanceID string `json:"instanceId,omitempty"`
+
+        // Phase represents the current lifecycle phase of the instance.
+        // +optional
+        Phase InstancePhase `json:"phase,omitempty"`
+
+        // PrivateIP is the private IP address assigned to the instance.
+        // +optional
+        PrivateIP string `json:"privateIp,omitempty"`
+
+        // PublicIP is the public IP address assigned to the instance, if any.
+        // +optional
+        PublicIP string `json:"publicIp,omitempty"`
+
+        // FailureReason contains the error message if the instance failed.
+        // +optional
+        FailureReason string `json:"failureReason,omitempty"`
+
+        // ObservedGeneration is the last generation reconciled by the controller.
+        // +optional
+        ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
+        // Conditions represent the current state of the OCIInstance resource.
+        // +listType=map
+        // +listMapKey=type
+        // +optional
+        Conditions []metav1.Condition `json:"conditions,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Phase",type="string",JSONPath=".status.phase"
+// +kubebuilder:printcolumn:name="InstanceID",type="string",JSONPath=".status.instanceId"
+// +kubebuilder:printcolumn:name="PrivateIP",type="string",JSONPath=".status.privateIp"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+
+// OCIInstance is the Schema for the ociinstances API
+type OCIInstance struct {
+        metav1.TypeMeta   `json:",inline"`
+        metav1.ObjectMeta `json:"metadata,omitempty"`
+
+        Spec   OCIInstanceSpec   `json:"spec,omitempty"`
+        Status OCIInstanceStatus `json:"status,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// OCIInstanceList contains a list of OCIInstance
+type OCIInstanceList struct {
+        metav1.TypeMeta `json:",inline"`
+        metav1.ListMeta `json:"metadata,omitempty"`
+        Items           []OCIInstance `json:"items"`
+}
+
+// SetFailedStatus sets the phase to Failed with the given reason.
+func (o *OCIInstance) SetFailedStatus(reason string) <span class="cov0" title="0">{
+        o.Status.Phase = InstancePhaseFailed
+        o.Status.FailureReason = reason
+}</span>
+
+// SetObservedGeneration sets the observed generation on the status.
+func (o *OCIInstance) SetObservedGeneration(generation int64) <span class="cov0" title="0">{
+        o.Status.ObservedGeneration = generation
+}</span>
+
+func init() <span class="cov0" title="0">{
+        SchemeBuilder.Register(&amp;OCIInstance{}, &amp;OCIInstanceList{})
+}</span>
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">/*
+Copyright 2026.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+package v1alpha1
+
+import (
+        metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+// SecurityRuleDirection defines whether a rule applies to ingress or egress traffic
+// +kubebuilder:validation:Enum=INGRESS;EGRESS
+type SecurityRuleDirection string
+
+const (
+        SecurityRuleDirectionIngress SecurityRuleDirection = "INGRESS"
+        SecurityRuleDirectionEgress  SecurityRuleDirection = "EGRESS"
+)
+
+// SecurityRule defines a single ingress or egress rule
+type SecurityRule struct {
+        // Description is a human-readable description of the rule.
+        // +optional
+        Description string `json:"description,omitempty"`
+
+        // Direction specifies whether this is an INGRESS or EGRESS rule.
+        // +kubebuilder:validation:Required
+        Direction SecurityRuleDirection `json:"direction"`
+
+        // Protocol is the IP protocol (e.g. "6" for TCP, "17" for UDP, "all" for all protocols).
+        // +kubebuilder:validation:Required
+        Protocol string `json:"protocol"`
+
+        // Source is the source CIDR for ingress rules (e.g. "0.0.0.0/0").
+        // +optional
+        Source string `json:"source,omitempty"`
+
+        // Destination is the destination CIDR for egress rules (e.g. "0.0.0.0/0").
+        // +optional
+        Destination string `json:"destination,omitempty"`
+
+        // MinPort is the minimum port number for the rule.
+        // +kubebuilder:validation:Minimum=1
+        // +kubebuilder:validation:Maximum=65535
+        // +optional
+        MinPort *int32 `json:"minPort,omitempty"`
+
+        // MaxPort is the maximum port number for the rule.
+        // +kubebuilder:validation:Minimum=1
+        // +kubebuilder:validation:Maximum=65535
+        // +optional
+        MaxPort *int32 `json:"maxPort,omitempty"`
+}
+
+// OCISecurityPolicySpec defines the desired state of OCISecurityPolicy
+type OCISecurityPolicySpec struct {
+        // CompartmentID is the OCID of the compartment containing the security list.
+        // +kubebuilder:validation:Required
+        // +kubebuilder:validation:MinLength=1
+        // +kubebuilder:validation:MaxLength=255
+        CompartmentID string `json:"compartmentId"`
+
+        // VcnID is the OCID of the VCN that owns the security list.
+        // +kubebuilder:validation:Required
+        // +kubebuilder:validation:MinLength=1
+        // +kubebuilder:validation:MaxLength=255
+        VcnID string `json:"vcnId"`
+
+        // DisplayName is the human-readable name for the security list.
+        // +kubebuilder:validation:Required
+        // +kubebuilder:validation:MinLength=1
+        // +kubebuilder:validation:MaxLength=255
+        DisplayName string `json:"displayName"`
+
+        // Rules is the list of security rules to apply.
+        // +kubebuilder:validation:MinItems=1
+        Rules []SecurityRule `json:"rules"`
+
+        // FreeformTags are key-value pairs you can attach to the security list.
+        // +optional
+        FreeformTags map[string]string `json:"freeformTags,omitempty"`
+}
+
+// SecurityPolicyPhase represents the lifecycle phase of the security policy
+// +kubebuilder:validation:Enum=Pending;Creating;Active;Updating;Deleting;Deleted;Failed
+type SecurityPolicyPhase string
+
+const (
+        SecurityPolicyPhasePending  SecurityPolicyPhase = "Pending"
+        SecurityPolicyPhaseCreating SecurityPolicyPhase = "Creating"
+        SecurityPolicyPhaseActive   SecurityPolicyPhase = "Active"
+        SecurityPolicyPhaseUpdating SecurityPolicyPhase = "Updating"
+        SecurityPolicyPhaseDeleting SecurityPolicyPhase = "Deleting"
+        SecurityPolicyPhaseDeleted  SecurityPolicyPhase = "Deleted"
+        SecurityPolicyPhaseFailed   SecurityPolicyPhase = "Failed"
+)
+
+// OCISecurityPolicyStatus defines the observed state of OCISecurityPolicy
+type OCISecurityPolicyStatus struct {
+        // SecurityListID is the OCID of the provisioned OCI security list.
+        // +optional
+        SecurityListID string `json:"securityListId,omitempty"`
+
+        // Phase represents the current lifecycle phase of the security policy.
+        // +optional
+        Phase SecurityPolicyPhase `json:"phase,omitempty"`
+
+        // FailureReason contains the error message if the policy failed.
+        // +optional
+        FailureReason string `json:"failureReason,omitempty"`
+
+        // ObservedGeneration is the last generation reconciled by the controller.
+        // +optional
+        ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
+        // Conditions represent the current state of the OCISecurityPolicy resource.
+        // +listType=map
+        // +listMapKey=type
+        // +optional
+        Conditions []metav1.Condition `json:"conditions,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Phase",type="string",JSONPath=".status.phase"
+// +kubebuilder:printcolumn:name="SecurityListID",type="string",JSONPath=".status.securityListId"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+
+// OCISecurityPolicy is the Schema for the ocisecuritypolicies API
+type OCISecurityPolicy struct {
+        metav1.TypeMeta   `json:",inline"`
+        metav1.ObjectMeta `json:"metadata,omitempty"`
+
+        Spec   OCISecurityPolicySpec   `json:"spec,omitempty"`
+        Status OCISecurityPolicyStatus `json:"status,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// OCISecurityPolicyList contains a list of OCISecurityPolicy
+type OCISecurityPolicyList struct {
+        metav1.TypeMeta `json:",inline"`
+        metav1.ListMeta `json:"metadata,omitempty"`
+        Items           []OCISecurityPolicy `json:"items"`
+}
+
+// SetFailedStatus sets the phase to Failed with the given reason.
+func (o *OCISecurityPolicy) SetFailedStatus(reason string) <span class="cov0" title="0">{
+        o.Status.Phase = SecurityPolicyPhaseFailed
+        o.Status.FailureReason = reason
+}</span>
+
+// SetObservedGeneration sets the observed generation on the status.
+func (o *OCISecurityPolicy) SetObservedGeneration(generation int64) <span class="cov0" title="0">{
+        o.Status.ObservedGeneration = generation
+}</span>
+
+func init() <span class="cov0" title="0">{
+        SchemeBuilder.Register(&amp;OCISecurityPolicy{}, &amp;OCISecurityPolicyList{})
+}</span>
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">//go:build !ignore_autogenerated
+
+/*
+Copyright 2026.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+// Code generated by controller-gen. DO NOT EDIT.
+
+package v1alpha1
+
+import (
+        "k8s.io/apimachinery/pkg/apis/meta/v1"
+        runtime "k8s.io/apimachinery/pkg/runtime"
+)
+
+// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
+func (in *OCIInstance) DeepCopyInto(out *OCIInstance) <span class="cov0" title="0">{
+        *out = *in
+        out.TypeMeta = in.TypeMeta
+        in.ObjectMeta.DeepCopyInto(&amp;out.ObjectMeta)
+        in.Spec.DeepCopyInto(&amp;out.Spec)
+        in.Status.DeepCopyInto(&amp;out.Status)
+}</span>
+
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new OCIInstance.
+func (in *OCIInstance) DeepCopy() *OCIInstance <span class="cov0" title="0">{
+        if in == nil </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+        <span class="cov0" title="0">out := new(OCIInstance)
+        in.DeepCopyInto(out)
+        return out</span>
+}
+
+// DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
+func (in *OCIInstance) DeepCopyObject() runtime.Object <span class="cov0" title="0">{
+        if c := in.DeepCopy(); c != nil </span><span class="cov0" title="0">{
+                return c
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
+func (in *OCIInstanceList) DeepCopyInto(out *OCIInstanceList) <span class="cov0" title="0">{
+        *out = *in
+        out.TypeMeta = in.TypeMeta
+        in.ListMeta.DeepCopyInto(&amp;out.ListMeta)
+        if in.Items != nil </span><span class="cov0" title="0">{
+                in, out := &amp;in.Items, &amp;out.Items
+                *out = make([]OCIInstance, len(*in))
+                for i := range *in </span><span class="cov0" title="0">{
+                        (*in)[i].DeepCopyInto(&amp;(*out)[i])
+                }</span>
+        }
+}
+
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new OCIInstanceList.
+func (in *OCIInstanceList) DeepCopy() *OCIInstanceList <span class="cov0" title="0">{
+        if in == nil </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+        <span class="cov0" title="0">out := new(OCIInstanceList)
+        in.DeepCopyInto(out)
+        return out</span>
+}
+
+// DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
+func (in *OCIInstanceList) DeepCopyObject() runtime.Object <span class="cov0" title="0">{
+        if c := in.DeepCopy(); c != nil </span><span class="cov0" title="0">{
+                return c
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
+func (in *OCIInstanceSpec) DeepCopyInto(out *OCIInstanceSpec) <span class="cov0" title="0">{
+        *out = *in
+        if in.OCPUs != nil </span><span class="cov0" title="0">{
+                in, out := &amp;in.OCPUs, &amp;out.OCPUs
+                *out = new(string)
+                **out = **in
+        }</span>
+        <span class="cov0" title="0">if in.MemoryInGBs != nil </span><span class="cov0" title="0">{
+                in, out := &amp;in.MemoryInGBs, &amp;out.MemoryInGBs
+                *out = new(string)
+                **out = **in
+        }</span>
+        <span class="cov0" title="0">if in.FreeformTags != nil </span><span class="cov0" title="0">{
+                in, out := &amp;in.FreeformTags, &amp;out.FreeformTags
+                *out = make(map[string]string, len(*in))
+                for key, val := range *in </span><span class="cov0" title="0">{
+                        (*out)[key] = val
+                }</span>
+        }
+}
+
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new OCIInstanceSpec.
+func (in *OCIInstanceSpec) DeepCopy() *OCIInstanceSpec <span class="cov0" title="0">{
+        if in == nil </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+        <span class="cov0" title="0">out := new(OCIInstanceSpec)
+        in.DeepCopyInto(out)
+        return out</span>
+}
+
+// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
+func (in *OCIInstanceStatus) DeepCopyInto(out *OCIInstanceStatus) <span class="cov0" title="0">{
+        *out = *in
+        if in.Conditions != nil </span><span class="cov0" title="0">{
+                in, out := &amp;in.Conditions, &amp;out.Conditions
+                *out = make([]v1.Condition, len(*in))
+                for i := range *in </span><span class="cov0" title="0">{
+                        (*in)[i].DeepCopyInto(&amp;(*out)[i])
+                }</span>
+        }
+}
+
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new OCIInstanceStatus.
+func (in *OCIInstanceStatus) DeepCopy() *OCIInstanceStatus <span class="cov0" title="0">{
+        if in == nil </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+        <span class="cov0" title="0">out := new(OCIInstanceStatus)
+        in.DeepCopyInto(out)
+        return out</span>
+}
+
+// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
+func (in *OCISecurityPolicy) DeepCopyInto(out *OCISecurityPolicy) <span class="cov0" title="0">{
+        *out = *in
+        out.TypeMeta = in.TypeMeta
+        in.ObjectMeta.DeepCopyInto(&amp;out.ObjectMeta)
+        in.Spec.DeepCopyInto(&amp;out.Spec)
+        in.Status.DeepCopyInto(&amp;out.Status)
+}</span>
+
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new OCISecurityPolicy.
+func (in *OCISecurityPolicy) DeepCopy() *OCISecurityPolicy <span class="cov0" title="0">{
+        if in == nil </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+        <span class="cov0" title="0">out := new(OCISecurityPolicy)
+        in.DeepCopyInto(out)
+        return out</span>
+}
+
+// DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
+func (in *OCISecurityPolicy) DeepCopyObject() runtime.Object <span class="cov0" title="0">{
+        if c := in.DeepCopy(); c != nil </span><span class="cov0" title="0">{
+                return c
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
+func (in *OCISecurityPolicyList) DeepCopyInto(out *OCISecurityPolicyList) <span class="cov0" title="0">{
+        *out = *in
+        out.TypeMeta = in.TypeMeta
+        in.ListMeta.DeepCopyInto(&amp;out.ListMeta)
+        if in.Items != nil </span><span class="cov0" title="0">{
+                in, out := &amp;in.Items, &amp;out.Items
+                *out = make([]OCISecurityPolicy, len(*in))
+                for i := range *in </span><span class="cov0" title="0">{
+                        (*in)[i].DeepCopyInto(&amp;(*out)[i])
+                }</span>
+        }
+}
+
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new OCISecurityPolicyList.
+func (in *OCISecurityPolicyList) DeepCopy() *OCISecurityPolicyList <span class="cov0" title="0">{
+        if in == nil </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+        <span class="cov0" title="0">out := new(OCISecurityPolicyList)
+        in.DeepCopyInto(out)
+        return out</span>
+}
+
+// DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
+func (in *OCISecurityPolicyList) DeepCopyObject() runtime.Object <span class="cov0" title="0">{
+        if c := in.DeepCopy(); c != nil </span><span class="cov0" title="0">{
+                return c
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
+func (in *OCISecurityPolicySpec) DeepCopyInto(out *OCISecurityPolicySpec) <span class="cov0" title="0">{
+        *out = *in
+        if in.Rules != nil </span><span class="cov0" title="0">{
+                in, out := &amp;in.Rules, &amp;out.Rules
+                *out = make([]SecurityRule, len(*in))
+                for i := range *in </span><span class="cov0" title="0">{
+                        (*in)[i].DeepCopyInto(&amp;(*out)[i])
+                }</span>
+        }
+        <span class="cov0" title="0">if in.FreeformTags != nil </span><span class="cov0" title="0">{
+                in, out := &amp;in.FreeformTags, &amp;out.FreeformTags
+                *out = make(map[string]string, len(*in))
+                for key, val := range *in </span><span class="cov0" title="0">{
+                        (*out)[key] = val
+                }</span>
+        }
+}
+
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new OCISecurityPolicySpec.
+func (in *OCISecurityPolicySpec) DeepCopy() *OCISecurityPolicySpec <span class="cov0" title="0">{
+        if in == nil </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+        <span class="cov0" title="0">out := new(OCISecurityPolicySpec)
+        in.DeepCopyInto(out)
+        return out</span>
+}
+
+// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
+func (in *OCISecurityPolicyStatus) DeepCopyInto(out *OCISecurityPolicyStatus) <span class="cov0" title="0">{
+        *out = *in
+        if in.Conditions != nil </span><span class="cov0" title="0">{
+                in, out := &amp;in.Conditions, &amp;out.Conditions
+                *out = make([]v1.Condition, len(*in))
+                for i := range *in </span><span class="cov0" title="0">{
+                        (*in)[i].DeepCopyInto(&amp;(*out)[i])
+                }</span>
+        }
+}
+
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new OCISecurityPolicyStatus.
+func (in *OCISecurityPolicyStatus) DeepCopy() *OCISecurityPolicyStatus <span class="cov0" title="0">{
+        if in == nil </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+        <span class="cov0" title="0">out := new(OCISecurityPolicyStatus)
+        in.DeepCopyInto(out)
+        return out</span>
+}
+
+// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
+func (in *SecurityRule) DeepCopyInto(out *SecurityRule) <span class="cov0" title="0">{
+        *out = *in
+        if in.MinPort != nil </span><span class="cov0" title="0">{
+                in, out := &amp;in.MinPort, &amp;out.MinPort
+                *out = new(int32)
+                **out = **in
+        }</span>
+        <span class="cov0" title="0">if in.MaxPort != nil </span><span class="cov0" title="0">{
+                in, out := &amp;in.MaxPort, &amp;out.MaxPort
+                *out = new(int32)
+                **out = **in
+        }</span>
+}
+
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new SecurityRule.
+func (in *SecurityRule) DeepCopy() *SecurityRule <span class="cov0" title="0">{
+        if in == nil </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+        <span class="cov0" title="0">out := new(SecurityRule)
+        in.DeepCopyInto(out)
+        return out</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">/*
+Copyright 2026.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package main
+
+import (
+        "crypto/tls"
+        "flag"
+        "os"
+
+        // Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
+        // to ensure that exec-entrypoint and run can make use of them.
+        _ "k8s.io/client-go/plugin/pkg/client/auth"
+
+        "k8s.io/apimachinery/pkg/runtime"
+        utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+        clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+        ctrl "sigs.k8s.io/controller-runtime"
+        "sigs.k8s.io/controller-runtime/pkg/healthz"
+        "sigs.k8s.io/controller-runtime/pkg/log/zap"
+        "sigs.k8s.io/controller-runtime/pkg/metrics/filters"
+        metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
+        "sigs.k8s.io/controller-runtime/pkg/webhook"
+
+        computev1alpha1 "github.com/zhaoanliu/oci-compute-operator/api/v1alpha1"
+        "github.com/zhaoanliu/oci-compute-operator/internal/controller"
+        // +kubebuilder:scaffold:imports
+)
+
+var (
+        scheme   = runtime.NewScheme()
+        setupLog = ctrl.Log.WithName("setup")
+)
+
+func init() <span class="cov0" title="0">{
+        utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+
+        utilruntime.Must(computev1alpha1.AddToScheme(scheme))
+        // +kubebuilder:scaffold:scheme
+}</span>
+
+// nolint:gocyclo
+func main() <span class="cov0" title="0">{
+        var metricsAddr string
+        var metricsCertPath, metricsCertName, metricsCertKey string
+        var webhookCertPath, webhookCertName, webhookCertKey string
+        var enableLeaderElection bool
+        var probeAddr string
+        var secureMetrics bool
+        var enableHTTP2 bool
+        var tlsOpts []func(*tls.Config)
+        flag.StringVar(&amp;metricsAddr, "metrics-bind-address", "0", "The address the metrics endpoint binds to. "+
+                "Use :8443 for HTTPS or :8080 for HTTP, or leave as 0 to disable the metrics service.")
+        flag.StringVar(&amp;probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
+        flag.BoolVar(&amp;enableLeaderElection, "leader-elect", false,
+                "Enable leader election for controller manager. "+
+                        "Enabling this will ensure there is only one active controller manager.")
+        flag.BoolVar(&amp;secureMetrics, "metrics-secure", true,
+                "If set, the metrics endpoint is served securely via HTTPS. Use --metrics-secure=false to use HTTP instead.")
+        flag.StringVar(&amp;webhookCertPath, "webhook-cert-path", "", "The directory that contains the webhook certificate.")
+        flag.StringVar(&amp;webhookCertName, "webhook-cert-name", "tls.crt", "The name of the webhook certificate file.")
+        flag.StringVar(&amp;webhookCertKey, "webhook-cert-key", "tls.key", "The name of the webhook key file.")
+        flag.StringVar(&amp;metricsCertPath, "metrics-cert-path", "",
+                "The directory that contains the metrics server certificate.")
+        flag.StringVar(&amp;metricsCertName, "metrics-cert-name", "tls.crt", "The name of the metrics server certificate file.")
+        flag.StringVar(&amp;metricsCertKey, "metrics-cert-key", "tls.key", "The name of the metrics server key file.")
+        flag.BoolVar(&amp;enableHTTP2, "enable-http2", false,
+                "If set, HTTP/2 will be enabled for the metrics and webhook servers")
+        opts := zap.Options{
+                Development: true,
+        }
+        opts.BindFlags(flag.CommandLine)
+        flag.Parse()
+
+        ctrl.SetLogger(zap.New(zap.UseFlagOptions(&amp;opts)))
+
+        // if the enable-http2 flag is false (the default), http/2 should be disabled
+        // due to its vulnerabilities. More specifically, disabling http/2 will
+        // prevent from being vulnerable to the HTTP/2 Stream Cancellation and
+        // Rapid Reset CVEs. For more information see:
+        // - https://github.com/advisories/GHSA-qppj-fm5r-hxr3
+        // - https://github.com/advisories/GHSA-4374-p667-p6c8
+        disableHTTP2 := func(c *tls.Config) </span><span class="cov0" title="0">{
+                setupLog.Info("Disabling HTTP/2")
+                c.NextProtos = []string{"http/1.1"}
+        }</span>
+
+        <span class="cov0" title="0">if !enableHTTP2 </span><span class="cov0" title="0">{
+                tlsOpts = append(tlsOpts, disableHTTP2)
+        }</span>
+
+        // Initial webhook TLS options
+        <span class="cov0" title="0">webhookTLSOpts := tlsOpts
+        webhookServerOptions := webhook.Options{
+                TLSOpts: webhookTLSOpts,
+        }
+
+        if len(webhookCertPath) &gt; 0 </span><span class="cov0" title="0">{
+                setupLog.Info("Initializing webhook certificate watcher using provided certificates",
+                        "webhook-cert-path", webhookCertPath, "webhook-cert-name", webhookCertName, "webhook-cert-key", webhookCertKey)
+
+                webhookServerOptions.CertDir = webhookCertPath
+                webhookServerOptions.CertName = webhookCertName
+                webhookServerOptions.KeyName = webhookCertKey
+        }</span>
+
+        <span class="cov0" title="0">webhookServer := webhook.NewServer(webhookServerOptions)
+
+        // Metrics endpoint is enabled in 'config/default/kustomization.yaml'. The Metrics options configure the server.
+        // More info:
+        // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.23.3/pkg/metrics/server
+        // - https://book.kubebuilder.io/reference/metrics.html
+        metricsServerOptions := metricsserver.Options{
+                BindAddress:   metricsAddr,
+                SecureServing: secureMetrics,
+                TLSOpts:       tlsOpts,
+        }
+
+        if secureMetrics </span><span class="cov0" title="0">{
+                // FilterProvider is used to protect the metrics endpoint with authn/authz.
+                // These configurations ensure that only authorized users and service accounts
+                // can access the metrics endpoint. The RBAC are configured in 'config/rbac/kustomization.yaml'. More info:
+                // https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.23.3/pkg/metrics/filters#WithAuthenticationAndAuthorization
+                metricsServerOptions.FilterProvider = filters.WithAuthenticationAndAuthorization
+        }</span>
+
+        // If the certificate is not specified, controller-runtime will automatically
+        // generate self-signed certificates for the metrics server. While convenient for development and testing,
+        // this setup is not recommended for production.
+        //
+        // TODO(user): If you enable certManager, uncomment the following lines:
+        // - [METRICS-WITH-CERTS] at config/default/kustomization.yaml to generate and use certificates
+        // managed by cert-manager for the metrics server.
+        // - [PROMETHEUS-WITH-CERTS] at config/prometheus/kustomization.yaml for TLS certification.
+        <span class="cov0" title="0">if len(metricsCertPath) &gt; 0 </span><span class="cov0" title="0">{
+                setupLog.Info("Initializing metrics certificate watcher using provided certificates",
+                        "metrics-cert-path", metricsCertPath, "metrics-cert-name", metricsCertName, "metrics-cert-key", metricsCertKey)
+
+                metricsServerOptions.CertDir = metricsCertPath
+                metricsServerOptions.CertName = metricsCertName
+                metricsServerOptions.KeyName = metricsCertKey
+        }</span>
+
+        <span class="cov0" title="0">mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+                Scheme:                 scheme,
+                Metrics:                metricsServerOptions,
+                WebhookServer:          webhookServer,
+                HealthProbeBindAddress: probeAddr,
+                LeaderElection:         enableLeaderElection,
+                LeaderElectionID:       "13951df4.nvcne-demo.io",
+                // LeaderElectionReleaseOnCancel defines if the leader should step down voluntarily
+                // when the Manager ends. This requires the binary to immediately end when the
+                // Manager is stopped, otherwise, this setting is unsafe. Setting this significantly
+                // speeds up voluntary leader transitions as the new leader don't have to wait
+                // LeaseDuration time first.
+                //
+                // In the default scaffold provided, the program ends immediately after
+                // the manager stops, so would be fine to enable this option. However,
+                // if you are doing or is intended to do any operation such as perform cleanups
+                // after the manager stops then its usage might be unsafe.
+                // LeaderElectionReleaseOnCancel: true,
+        })
+        if err != nil </span><span class="cov0" title="0">{
+                setupLog.Error(err, "Failed to start manager")
+                os.Exit(1)
+        }</span>
+
+        <span class="cov0" title="0">if err := (&amp;controller.OCIInstanceReconciler{
+                Client: mgr.GetClient(),
+                Scheme: mgr.GetScheme(),
+        }).SetupWithManager(mgr); err != nil </span><span class="cov0" title="0">{
+                setupLog.Error(err, "Failed to create controller", "controller", "OCIInstance")
+                os.Exit(1)
+        }</span>
+        <span class="cov0" title="0">if err := (&amp;controller.OCISecurityPolicyReconciler{
+                Client: mgr.GetClient(),
+                Scheme: mgr.GetScheme(),
+        }).SetupWithManager(mgr); err != nil </span><span class="cov0" title="0">{
+                setupLog.Error(err, "Failed to create controller", "controller", "OCISecurityPolicy")
+                os.Exit(1)
+        }</span>
+        // +kubebuilder:scaffold:builder
+
+        <span class="cov0" title="0">if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil </span><span class="cov0" title="0">{
+                setupLog.Error(err, "Failed to set up health check")
+                os.Exit(1)
+        }</span>
+        <span class="cov0" title="0">if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil </span><span class="cov0" title="0">{
+                setupLog.Error(err, "Failed to set up ready check")
+                os.Exit(1)
+        }</span>
+
+        <span class="cov0" title="0">setupLog.Info("Starting manager")
+        if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil </span><span class="cov0" title="0">{
+                setupLog.Error(err, "Failed to run manager")
+                os.Exit(1)
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">/*
+Copyright 2026.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+package controller
+
+import (
+        "context"
+
+        ctrl "sigs.k8s.io/controller-runtime"
+        "sigs.k8s.io/controller-runtime/pkg/client"
+        logf "sigs.k8s.io/controller-runtime/pkg/log"
+)
+
+// FailableResource is implemented by any resource that has a settable
+// failure reason and observed generation — allowing shared error handling
+// logic across different controller types.
+type FailableResource interface {
+        client.Object
+        SetFailedStatus(reason string)
+        SetObservedGeneration(generation int64)
+}
+
+// setFailedStatus is a generic helper that re-fetches the latest version
+// of any FailableResource and marks it as failed with a reason.
+// Re-fetching before update avoids resource version conflict errors.
+func setFailedStatus(ctx context.Context, c client.Client, obj FailableResource, reason string) (ctrl.Result, error) <span class="cov8" title="1">{
+        log := logf.FromContext(ctx)
+
+        // Re-fetch the latest version to avoid conflict errors
+        if err := c.Get(ctx, client.ObjectKeyFromObject(obj), obj); err != nil </span><span class="cov0" title="0">{
+                log.Error(err, "Failed to re-fetch resource before setting failed status")
+                return ctrl.Result{}, err
+        }</span>
+
+        <span class="cov8" title="1">obj.SetFailedStatus(reason)
+        obj.SetObservedGeneration(obj.GetGeneration())
+
+        if err := c.Status().Update(ctx, obj); err != nil </span><span class="cov0" title="0">{
+                log.Error(err, "Failed to update failure status")
+                return ctrl.Result{}, err
+        }</span>
+
+        <span class="cov8" title="1">return ctrl.Result{}, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">/*
+Copyright 2026.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+package controller
+
+import (
+        "context"
+
+        "github.com/oracle/oci-go-sdk/v65/core"
+)
+
+// MockComputeClient is a fake OCI compute client for use in tests.
+// Each operation is a function field that can be set per test to simulate
+// different OCI responses without making real API calls.
+type MockComputeClient struct {
+        LaunchInstanceFn    func(ctx context.Context, request core.LaunchInstanceRequest) (core.LaunchInstanceResponse, error)
+        GetInstanceFn       func(ctx context.Context, request core.GetInstanceRequest) (core.GetInstanceResponse, error)
+        TerminateInstanceFn func(ctx context.Context, request core.TerminateInstanceRequest) (core.TerminateInstanceResponse, error)
+}
+
+func (m *MockComputeClient) LaunchInstance(ctx context.Context, request core.LaunchInstanceRequest) (core.LaunchInstanceResponse, error) <span class="cov8" title="1">{
+        if m.LaunchInstanceFn != nil </span><span class="cov8" title="1">{
+                return m.LaunchInstanceFn(ctx, request)
+        }</span>
+        <span class="cov0" title="0">return core.LaunchInstanceResponse{}, nil</span>
+}
+
+func (m *MockComputeClient) GetInstance(ctx context.Context, request core.GetInstanceRequest) (core.GetInstanceResponse, error) <span class="cov8" title="1">{
+        if m.GetInstanceFn != nil </span><span class="cov8" title="1">{
+                return m.GetInstanceFn(ctx, request)
+        }</span>
+        <span class="cov0" title="0">return core.GetInstanceResponse{}, nil</span>
+}
+
+func (m *MockComputeClient) TerminateInstance(ctx context.Context, request core.TerminateInstanceRequest) (core.TerminateInstanceResponse, error) <span class="cov8" title="1">{
+        if m.TerminateInstanceFn != nil </span><span class="cov8" title="1">{
+                return m.TerminateInstanceFn(ctx, request)
+        }</span>
+        <span class="cov0" title="0">return core.TerminateInstanceResponse{}, nil</span>
+}
+
+// MockVirtualNetworkClient is a fake OCI VCN client for use in tests.
+type MockVirtualNetworkClient struct {
+        CreateSecurityListFn func(ctx context.Context, request core.CreateSecurityListRequest) (core.CreateSecurityListResponse, error)
+        GetSecurityListFn    func(ctx context.Context, request core.GetSecurityListRequest) (core.GetSecurityListResponse, error)
+        DeleteSecurityListFn func(ctx context.Context, request core.DeleteSecurityListRequest) (core.DeleteSecurityListResponse, error)
+}
+
+func (m *MockVirtualNetworkClient) CreateSecurityList(ctx context.Context, request core.CreateSecurityListRequest) (core.CreateSecurityListResponse, error) <span class="cov8" title="1">{
+        if m.CreateSecurityListFn != nil </span><span class="cov8" title="1">{
+                return m.CreateSecurityListFn(ctx, request)
+        }</span>
+        <span class="cov0" title="0">return core.CreateSecurityListResponse{}, nil</span>
+}
+
+func (m *MockVirtualNetworkClient) GetSecurityList(ctx context.Context, request core.GetSecurityListRequest) (core.GetSecurityListResponse, error) <span class="cov8" title="1">{
+        if m.GetSecurityListFn != nil </span><span class="cov8" title="1">{
+                return m.GetSecurityListFn(ctx, request)
+        }</span>
+        <span class="cov0" title="0">return core.GetSecurityListResponse{}, nil</span>
+}
+
+func (m *MockVirtualNetworkClient) DeleteSecurityList(ctx context.Context, request core.DeleteSecurityListRequest) (core.DeleteSecurityListResponse, error) <span class="cov8" title="1">{
+        if m.DeleteSecurityListFn != nil </span><span class="cov8" title="1">{
+                return m.DeleteSecurityListFn(ctx, request)
+        }</span>
+        <span class="cov0" title="0">return core.DeleteSecurityListResponse{}, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">/*
+Copyright 2026.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+package controller
+
+import (
+        "context"
+        "fmt"
+        "strconv"
+        "time"
+
+        "k8s.io/apimachinery/pkg/api/errors"
+        "k8s.io/apimachinery/pkg/runtime"
+        ctrl "sigs.k8s.io/controller-runtime"
+        "sigs.k8s.io/controller-runtime/pkg/client"
+        "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+        logf "sigs.k8s.io/controller-runtime/pkg/log"
+
+        "github.com/oracle/oci-go-sdk/v65/common"
+        "github.com/oracle/oci-go-sdk/v65/core"
+
+        computev1alpha1 "github.com/zhaoanliu/oci-compute-operator/api/v1alpha1"
+)
+
+const (
+        // ociInstanceFinalizer is added to OCIInstance resources to ensure
+        // the OCI instance is deleted before the Kubernetes resource is removed
+        ociInstanceFinalizer = "compute.nvcne-demo.io/finalizer"
+
+        // requeueAfter is how long to wait before rechecking a provisioning instance
+        requeueAfter = 30 * time.Second
+)
+
+// OCIInstanceReconciler reconciles a OCIInstance object
+type OCIInstanceReconciler struct {
+        client.Client
+        Scheme        *runtime.Scheme
+        ComputeClient OCIComputeClient
+}
+
+// +kubebuilder:rbac:groups=compute.nvcne-demo.io,resources=ociinstances,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=compute.nvcne-demo.io,resources=ociinstances/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=compute.nvcne-demo.io,resources=ociinstances/finalizers,verbs=update
+
+// Reconcile moves the current state of the OCIInstance closer to the desired state.
+func (r *OCIInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) <span class="cov8" title="1">{
+        log := logf.FromContext(ctx)
+
+        // Step 1: Fetch the OCIInstance resource
+        instance := &amp;computev1alpha1.OCIInstance{}
+        if err := r.Get(ctx, req.NamespacedName, instance); err != nil </span><span class="cov0" title="0">{
+                if errors.IsNotFound(err) </span><span class="cov0" title="0">{
+                        // Resource was deleted before we could reconcile - nothing to do
+                        log.Info("OCIInstance not found, likely deleted")
+                        return ctrl.Result{}, nil
+                }</span>
+                <span class="cov0" title="0">log.Error(err, "Failed to fetch OCIInstance")
+                return ctrl.Result{}, err</span>
+        }
+
+        // Step 2: Handle deletion - check if resource is being deleted
+        <span class="cov8" title="1">if !instance.DeletionTimestamp.IsZero() </span><span class="cov8" title="1">{
+                return r.handleDeletion(ctx, instance)
+        }</span>
+
+        // Step 3: Ensure finalizer is present
+        <span class="cov8" title="1">if !controllerutil.ContainsFinalizer(instance, ociInstanceFinalizer) </span><span class="cov8" title="1">{
+                log.Info("Adding finalizer to OCIInstance")
+                controllerutil.AddFinalizer(instance, ociInstanceFinalizer)
+                if err := r.Update(ctx, instance); err != nil </span><span class="cov0" title="0">{
+                        log.Error(err, "Failed to add finalizer")
+                        return ctrl.Result{}, err
+                }</span>
+                // Return here - the Update will trigger another reconcile
+                <span class="cov8" title="1">return ctrl.Result{}, nil</span>
+        }
+
+        // If already failed, stop retrying unless spec changed
+        <span class="cov8" title="1">if instance.Status.Phase == computev1alpha1.InstancePhaseFailed &amp;&amp;
+                instance.Status.ObservedGeneration == instance.Generation </span><span class="cov8" title="1">{
+                log.Info("OCIInstance is in Failed phase, not retrying until spec changes")
+                return ctrl.Result{}, nil
+        }</span>
+
+        // Step 4: Use injected OCI compute client
+        <span class="cov8" title="1">if r.ComputeClient == nil </span><span class="cov8" title="1">{
+                var err error
+                r.ComputeClient, err = newComputeClient()
+                if err != nil </span><span class="cov0" title="0">{
+                        log.Error(err, "Failed to create OCI compute client")
+                        return setFailedStatus(ctx, r.Client, instance, fmt.Sprintf("Failed to create OCI client: %v", err))
+                }</span>
+        }
+        <span class="cov8" title="1">computeClient := r.ComputeClient
+
+        // Step 5: Check if OCI instance already exists
+        if instance.Status.InstanceID != "" </span><span class="cov8" title="1">{
+                return r.reconcileExisting(ctx, instance, computeClient)
+        }</span>
+
+        // Step 6: Provision new OCI instance
+        <span class="cov8" title="1">return r.reconcileNew(ctx, instance, computeClient)</span>
+}
+
+// handleDeletion cleans up the OCI instance when the Kubernetes resource is deleted
+func (r *OCIInstanceReconciler) handleDeletion(ctx context.Context, instance *computev1alpha1.OCIInstance) (ctrl.Result, error) <span class="cov8" title="1">{
+        log := logf.FromContext(ctx)
+
+        if !controllerutil.ContainsFinalizer(instance, ociInstanceFinalizer) </span><span class="cov0" title="0">{
+                // No finalizer means nothing to clean up
+                return ctrl.Result{}, nil
+        }</span>
+
+        // If we have an OCI instance ID, terminate it first
+        <span class="cov8" title="1">if instance.Status.InstanceID != "" </span><span class="cov8" title="1">{
+                log.Info("Terminating OCI instance", "instanceId", instance.Status.InstanceID)
+
+                // Use injected client, or create one if not injected
+                computeClient := r.ComputeClient
+                if computeClient == nil </span><span class="cov0" title="0">{
+                        var err error
+                        computeClient, err = newComputeClient()
+                        if err != nil </span><span class="cov0" title="0">{
+                                log.Error(err, "Failed to create OCI client during deletion")
+                                return ctrl.Result{}, err
+                        }</span>
+                }
+
+                <span class="cov8" title="1">_, err := computeClient.TerminateInstance(ctx, core.TerminateInstanceRequest{
+                        InstanceId: &amp;instance.Status.InstanceID,
+                })
+                if err != nil </span><span class="cov0" title="0">{
+                        log.Error(err, "Failed to terminate OCI instance")
+                        return ctrl.Result{RequeueAfter: requeueAfter}, err
+                }</span>
+
+                <span class="cov8" title="1">log.Info("OCI instance termination initiated", "instanceId", instance.Status.InstanceID)</span>
+        }
+
+        // Remove finalizer so Kubernetes can delete the resource
+        <span class="cov8" title="1">log.Info("Removing finalizer from OCIInstance")
+        controllerutil.RemoveFinalizer(instance, ociInstanceFinalizer)
+        if err := r.Update(ctx, instance); err != nil </span><span class="cov0" title="0">{
+                log.Error(err, "Failed to remove finalizer")
+                return ctrl.Result{}, err
+        }</span>
+
+        <span class="cov8" title="1">return ctrl.Result{}, nil</span>
+}
+
+// reconcileNew provisions a brand new OCI compute instance
+func (r *OCIInstanceReconciler) reconcileNew(ctx context.Context, instance *computev1alpha1.OCIInstance, computeClient OCIComputeClient) (ctrl.Result, error) <span class="cov8" title="1">{
+        log := logf.FromContext(ctx)
+        log.Info("Provisioning new OCI instance", "displayName", instance.Spec.DisplayName)
+
+        // Set status to Provisioning
+        instance.Status.Phase = computev1alpha1.InstancePhaseProvisioning
+        if err := r.Status().Update(ctx, instance); err != nil </span><span class="cov0" title="0">{
+                log.Error(err, "Failed to update status to Provisioning")
+                return ctrl.Result{}, err
+        }</span>
+
+        // Build the launch request
+        <span class="cov8" title="1">launchDetails := core.LaunchInstanceDetails{
+                CompartmentId:      &amp;instance.Spec.CompartmentID,
+                DisplayName:        &amp;instance.Spec.DisplayName,
+                Shape:              &amp;instance.Spec.Shape,
+                ImageId:            &amp;instance.Spec.ImageID,
+                AvailabilityDomain: &amp;instance.Spec.AvailabilityDomain,
+                CreateVnicDetails: &amp;core.CreateVnicDetails{
+                        SubnetId: &amp;instance.Spec.SubnetID,
+                },
+        }
+
+        // Add flex shape config if both OCPUs and MemoryInGBs are specified
+        // OCI requires both fields together for flex shapes
+        if instance.Spec.OCPUs != nil &amp;&amp; instance.Spec.MemoryInGBs != nil </span><span class="cov8" title="1">{
+                ocpus, _ := strconv.ParseFloat(*instance.Spec.OCPUs, 32)
+                memoryInGBs, _ := strconv.ParseFloat(*instance.Spec.MemoryInGBs, 32)
+                ocpusFloat := float32(ocpus)
+                memoryFloat := float32(memoryInGBs)
+                launchDetails.ShapeConfig = &amp;core.LaunchInstanceShapeConfigDetails{
+                        Ocpus:       &amp;ocpusFloat,
+                        MemoryInGBs: &amp;memoryFloat,
+                }
+        }</span>
+
+        // Add freeform tags if specified
+        <span class="cov8" title="1">if len(instance.Spec.FreeformTags) &gt; 0 </span><span class="cov0" title="0">{
+                launchDetails.FreeformTags = instance.Spec.FreeformTags
+        }</span>
+
+        // Call OCI API to launch the instance
+        <span class="cov8" title="1">response, err := computeClient.LaunchInstance(ctx, core.LaunchInstanceRequest{
+                LaunchInstanceDetails: launchDetails,
+        })
+        if err != nil </span><span class="cov8" title="1">{
+                log.Error(err, "Failed to launch OCI instance")
+                return setFailedStatus(ctx, r.Client, instance, fmt.Sprintf("Failed to launch instance: %v", err))
+        }</span>
+
+        // Update status with the new instance ID
+        <span class="cov8" title="1">instance.Status.InstanceID = *response.Id
+        instance.Status.Phase = computev1alpha1.InstancePhaseProvisioning
+        instance.Status.ObservedGeneration = instance.Generation
+
+        if err := r.Status().Update(ctx, instance); err != nil </span><span class="cov0" title="0">{
+                log.Error(err, "Failed to update status with instance ID")
+                return ctrl.Result{}, err
+        }</span>
+
+        <span class="cov8" title="1">log.Info("OCI instance launch initiated", "instanceId", instance.Status.InstanceID)
+
+        // Requeue to check provisioning status
+        return ctrl.Result{RequeueAfter: requeueAfter}, nil</span>
+}
+
+// reconcileExisting checks and syncs the status of an already-provisioned OCI instance
+func (r *OCIInstanceReconciler) reconcileExisting(ctx context.Context, instance *computev1alpha1.OCIInstance, computeClient OCIComputeClient) (ctrl.Result, error) <span class="cov8" title="1">{
+        log := logf.FromContext(ctx)
+        log.Info("Checking existing OCI instance", "instanceId", instance.Status.InstanceID)
+
+        // Fetch current state from OCI
+        response, err := computeClient.GetInstance(ctx, core.GetInstanceRequest{
+                InstanceId: &amp;instance.Status.InstanceID,
+        })
+        if err != nil </span><span class="cov0" title="0">{
+                log.Error(err, "Failed to get OCI instance state")
+                return ctrl.Result{RequeueAfter: requeueAfter}, err
+        }</span>
+
+        <span class="cov8" title="1">ociInstance := response.Instance
+
+        // Map OCI lifecycle state to our phase
+        switch ociInstance.LifecycleState </span>{
+        case core.InstanceLifecycleStateRunning:<span class="cov8" title="1">
+                instance.Status.Phase = computev1alpha1.InstancePhaseRunning</span>
+        case core.InstanceLifecycleStateProvisioning,
+                core.InstanceLifecycleStateStarting:<span class="cov8" title="1">
+                instance.Status.Phase = computev1alpha1.InstancePhaseProvisioning
+                // Still provisioning - requeue to check again
+                if err := r.Status().Update(ctx, instance); err != nil </span><span class="cov0" title="0">{
+                        return ctrl.Result{}, err
+                }</span>
+                <span class="cov8" title="1">return ctrl.Result{RequeueAfter: requeueAfter}, nil</span>
+        case core.InstanceLifecycleStateTerminating:<span class="cov8" title="1">
+                instance.Status.Phase = computev1alpha1.InstancePhaseTerminating</span>
+        case core.InstanceLifecycleStateTerminated:<span class="cov8" title="1">
+                instance.Status.Phase = computev1alpha1.InstancePhaseTerminated</span>
+        default:<span class="cov0" title="0">
+                instance.Status.Phase = computev1alpha1.InstancePhaseFailed</span>
+        }
+
+        <span class="cov8" title="1">instance.Status.ObservedGeneration = instance.Generation
+
+        if err := r.Status().Update(ctx, instance); err != nil </span><span class="cov0" title="0">{
+                log.Error(err, "Failed to update instance status")
+                return ctrl.Result{}, err
+        }</span>
+
+        <span class="cov8" title="1">log.Info("OCI instance status synced", "phase", instance.Status.Phase)
+
+        // If running, no need to requeue frequently
+        if instance.Status.Phase == computev1alpha1.InstancePhaseRunning </span><span class="cov8" title="1">{
+                return ctrl.Result{RequeueAfter: 5 * time.Minute}, nil
+        }</span>
+
+        <span class="cov8" title="1">return ctrl.Result{RequeueAfter: requeueAfter}, nil</span>
+}
+
+// newComputeClient creates a real OCI compute client using default config.
+// In production this is called lazily if no client was injected.
+func newComputeClient() (OCIComputeClient, error) <span class="cov8" title="1">{
+        computeClient, err := core.NewComputeClientWithConfigurationProvider(
+                common.DefaultConfigProvider(),
+        )
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to create OCI compute client: %w", err)
+        }</span>
+        <span class="cov8" title="1">return &amp;computeClient, nil</span>
+}
+
+// SetupWithManager sets up the controller with the Manager.
+func (r *OCIInstanceReconciler) SetupWithManager(mgr ctrl.Manager) error <span class="cov0" title="0">{
+        return ctrl.NewControllerManagedBy(mgr).
+                For(&amp;computev1alpha1.OCIInstance{}).
+                Named("ociinstance").
+                Complete(r)
+}</span>
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">/*
+Copyright 2026.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+package controller
+
+import (
+        "context"
+        "fmt"
+        "time"
+
+        "k8s.io/apimachinery/pkg/api/errors"
+        "k8s.io/apimachinery/pkg/runtime"
+        ctrl "sigs.k8s.io/controller-runtime"
+        "sigs.k8s.io/controller-runtime/pkg/client"
+        "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+        logf "sigs.k8s.io/controller-runtime/pkg/log"
+
+        "github.com/oracle/oci-go-sdk/v65/common"
+        "github.com/oracle/oci-go-sdk/v65/core"
+
+        computev1alpha1 "github.com/zhaoanliu/oci-compute-operator/api/v1alpha1"
+)
+
+const (
+        // ociSecurityPolicyFinalizer ensures the OCI security list is deleted
+        // before the Kubernetes resource is removed
+        ociSecurityPolicyFinalizer = "compute.nvcne-demo.io/security-policy-finalizer"
+
+        // securityPolicyRequeueAfter is how long to wait before rechecking
+        securityPolicyRequeueAfter = 30 * time.Second
+)
+
+// OCISecurityPolicyReconciler reconciles a OCISecurityPolicy object
+type OCISecurityPolicyReconciler struct {
+        client.Client
+        Scheme               *runtime.Scheme
+        VirtualNetworkClient OCIVirtualNetworkClient
+}
+
+// +kubebuilder:rbac:groups=compute.nvcne-demo.io,resources=ocisecuritypolicies,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=compute.nvcne-demo.io,resources=ocisecuritypolicies/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=compute.nvcne-demo.io,resources=ocisecuritypolicies/finalizers,verbs=update
+
+// Reconcile moves the current state of the OCISecurityPolicy closer to desired state.
+func (r *OCISecurityPolicyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) <span class="cov8" title="1">{
+        log := logf.FromContext(ctx)
+
+        // Step 1: Fetch the OCISecurityPolicy resource
+        policy := &amp;computev1alpha1.OCISecurityPolicy{}
+        if err := r.Get(ctx, req.NamespacedName, policy); err != nil </span><span class="cov0" title="0">{
+                if errors.IsNotFound(err) </span><span class="cov0" title="0">{
+                        log.Info("OCISecurityPolicy not found, likely deleted")
+                        return ctrl.Result{}, nil
+                }</span>
+                <span class="cov0" title="0">log.Error(err, "Failed to fetch OCISecurityPolicy")
+                return ctrl.Result{}, err</span>
+        }
+
+        // Step 2: Handle deletion
+        <span class="cov8" title="1">if !policy.DeletionTimestamp.IsZero() </span><span class="cov8" title="1">{
+                return r.handleDeletion(ctx, policy)
+        }</span>
+
+        // Step 3: Ensure finalizer is present
+        <span class="cov8" title="1">if !controllerutil.ContainsFinalizer(policy, ociSecurityPolicyFinalizer) </span><span class="cov8" title="1">{
+                log.Info("Adding finalizer to OCISecurityPolicy")
+                controllerutil.AddFinalizer(policy, ociSecurityPolicyFinalizer)
+                if err := r.Update(ctx, policy); err != nil </span><span class="cov0" title="0">{
+                        log.Error(err, "Failed to add finalizer")
+                        return ctrl.Result{}, err
+                }</span>
+                <span class="cov8" title="1">return ctrl.Result{}, nil</span>
+        }
+
+        // If already failed, stop retrying unless spec changed
+        <span class="cov8" title="1">if policy.Status.Phase == computev1alpha1.SecurityPolicyPhaseFailed &amp;&amp;
+                policy.Status.ObservedGeneration == policy.Generation </span><span class="cov8" title="1">{
+                log.Info("OCISecurityPolicy is in Failed phase, not retrying until spec changes")
+                return ctrl.Result{}, nil
+        }</span>
+
+        // Step 4: Use injected OCI virtual network client
+        <span class="cov8" title="1">if r.VirtualNetworkClient == nil </span><span class="cov8" title="1">{
+                var err error
+                r.VirtualNetworkClient, err = newVirtualNetworkClient()
+                if err != nil </span><span class="cov0" title="0">{
+                        log.Error(err, "Failed to create OCI VCN client")
+                        return setFailedStatus(ctx, r.Client, policy, fmt.Sprintf("Failed to create OCI client: %v", err))
+                }</span>
+        }
+        <span class="cov8" title="1">vcnClient := r.VirtualNetworkClient
+
+        // Step 5: Check if security list already exists
+        if policy.Status.SecurityListID != "" </span><span class="cov8" title="1">{
+                return r.reconcileExisting(ctx, policy, vcnClient)
+        }</span>
+
+        // Step 6: Create new security list
+        <span class="cov8" title="1">return r.reconcileNew(ctx, policy, vcnClient)</span>
+}
+
+// handleDeletion cleans up the OCI security list when the Kubernetes resource is deleted
+func (r *OCISecurityPolicyReconciler) handleDeletion(ctx context.Context, policy *computev1alpha1.OCISecurityPolicy) (ctrl.Result, error) <span class="cov8" title="1">{
+        log := logf.FromContext(ctx)
+
+        if !controllerutil.ContainsFinalizer(policy, ociSecurityPolicyFinalizer) </span><span class="cov0" title="0">{
+                return ctrl.Result{}, nil
+        }</span>
+
+        // Delete the OCI security list if it exists
+        <span class="cov8" title="1">if policy.Status.SecurityListID != "" </span><span class="cov8" title="1">{
+                log.Info("Deleting OCI security list", "securityListId", policy.Status.SecurityListID)
+
+                vcnClient := r.VirtualNetworkClient
+                if vcnClient == nil </span><span class="cov0" title="0">{
+                        var err error
+                        vcnClient, err = newVirtualNetworkClient()
+                        if err != nil </span><span class="cov0" title="0">{
+                                log.Error(err, "Failed to create OCI VCN client during deletion")
+                                return ctrl.Result{}, err
+                        }</span>
+                }
+
+                <span class="cov8" title="1">_, err := vcnClient.DeleteSecurityList(ctx, core.DeleteSecurityListRequest{
+                        SecurityListId: &amp;policy.Status.SecurityListID,
+                })
+                if err != nil </span><span class="cov0" title="0">{
+                        log.Error(err, "Failed to delete OCI security list")
+                        return ctrl.Result{RequeueAfter: securityPolicyRequeueAfter}, err
+                }</span>
+
+                <span class="cov8" title="1">log.Info("OCI security list deleted", "securityListId", policy.Status.SecurityListID)</span>
+        }
+
+        // Remove finalizer so Kubernetes can complete deletion
+        <span class="cov8" title="1">log.Info("Removing finalizer from OCISecurityPolicy")
+        controllerutil.RemoveFinalizer(policy, ociSecurityPolicyFinalizer)
+        if err := r.Update(ctx, policy); err != nil </span><span class="cov0" title="0">{
+                log.Error(err, "Failed to remove finalizer")
+                return ctrl.Result{}, err
+        }</span>
+
+        <span class="cov8" title="1">return ctrl.Result{}, nil</span>
+}
+
+// reconcileNew creates a brand new OCI security list
+func (r *OCISecurityPolicyReconciler) reconcileNew(ctx context.Context, policy *computev1alpha1.OCISecurityPolicy, vcnClient OCIVirtualNetworkClient) (ctrl.Result, error) <span class="cov8" title="1">{
+        log := logf.FromContext(ctx)
+        log.Info("Creating new OCI security list", "displayName", policy.Spec.DisplayName)
+
+        // Set status to Creating
+        policy.Status.Phase = computev1alpha1.SecurityPolicyPhaseCreating
+        if err := r.Status().Update(ctx, policy); err != nil </span><span class="cov0" title="0">{
+                log.Error(err, "Failed to update status to Creating")
+                return ctrl.Result{}, err
+        }</span>
+
+        // Convert our rules to OCI ingress/egress rules
+        <span class="cov8" title="1">ingressRules, egressRules := r.convertRules(policy.Spec.Rules)
+
+        // Call OCI API to create the security list
+        response, err := vcnClient.CreateSecurityList(ctx, core.CreateSecurityListRequest{
+                CreateSecurityListDetails: core.CreateSecurityListDetails{
+                        CompartmentId:        &amp;policy.Spec.CompartmentID,
+                        VcnId:                &amp;policy.Spec.VcnID,
+                        DisplayName:          &amp;policy.Spec.DisplayName,
+                        IngressSecurityRules: ingressRules,
+                        EgressSecurityRules:  egressRules,
+                        FreeformTags:         policy.Spec.FreeformTags,
+                },
+        })
+        if err != nil </span><span class="cov8" title="1">{
+                log.Error(err, "Failed to create OCI security list")
+                return setFailedStatus(ctx, r.Client, policy, fmt.Sprintf("Failed to create security list: %v", err))
+        }</span>
+
+        // Update status with new security list ID
+        <span class="cov8" title="1">policy.Status.SecurityListID = *response.Id
+        policy.Status.Phase = computev1alpha1.SecurityPolicyPhaseActive
+        policy.Status.ObservedGeneration = policy.Generation
+
+        if err := r.Status().Update(ctx, policy); err != nil </span><span class="cov0" title="0">{
+                log.Error(err, "Failed to update status with security list ID")
+                return ctrl.Result{}, err
+        }</span>
+
+        <span class="cov8" title="1">log.Info("OCI security list created", "securityListId", policy.Status.SecurityListID)
+        return ctrl.Result{RequeueAfter: 5 * time.Minute}, nil</span>
+}
+
+// reconcileExisting syncs the state of an already-created OCI security list
+func (r *OCISecurityPolicyReconciler) reconcileExisting(ctx context.Context, policy *computev1alpha1.OCISecurityPolicy, vcnClient OCIVirtualNetworkClient) (ctrl.Result, error) <span class="cov8" title="1">{
+        log := logf.FromContext(ctx)
+        log.Info("Checking existing OCI security list", "securityListId", policy.Status.SecurityListID)
+
+        // Fetch current state from OCI
+        response, err := vcnClient.GetSecurityList(ctx, core.GetSecurityListRequest{
+                SecurityListId: &amp;policy.Status.SecurityListID,
+        })
+        if err != nil </span><span class="cov0" title="0">{
+                log.Error(err, "Failed to get OCI security list")
+                return ctrl.Result{RequeueAfter: securityPolicyRequeueAfter}, err
+        }</span>
+
+        // Map OCI lifecycle state to our phase
+        <span class="cov8" title="1">switch response.LifecycleState </span>{
+        case core.SecurityListLifecycleStateAvailable:<span class="cov8" title="1">
+                policy.Status.Phase = computev1alpha1.SecurityPolicyPhaseActive</span>
+        case core.SecurityListLifecycleStateProvisioning:<span class="cov0" title="0">
+                policy.Status.Phase = computev1alpha1.SecurityPolicyPhaseCreating
+                if err := r.Status().Update(ctx, policy); err != nil </span><span class="cov0" title="0">{
+                        return ctrl.Result{}, err
+                }</span>
+                <span class="cov0" title="0">return ctrl.Result{RequeueAfter: securityPolicyRequeueAfter}, nil</span>
+        case core.SecurityListLifecycleStateTerminating:<span class="cov0" title="0">
+                policy.Status.Phase = computev1alpha1.SecurityPolicyPhaseDeleting</span>
+        case core.SecurityListLifecycleStateTerminated:<span class="cov0" title="0">
+                policy.Status.Phase = computev1alpha1.SecurityPolicyPhaseDeleted</span>
+        default:<span class="cov0" title="0">
+                policy.Status.Phase = computev1alpha1.SecurityPolicyPhaseFailed</span>
+        }
+
+        <span class="cov8" title="1">policy.Status.ObservedGeneration = policy.Generation
+
+        if err := r.Status().Update(ctx, policy); err != nil </span><span class="cov0" title="0">{
+                log.Error(err, "Failed to update security policy status")
+                return ctrl.Result{}, err
+        }</span>
+
+        <span class="cov8" title="1">log.Info("OCI security list status synced", "phase", policy.Status.Phase)
+        return ctrl.Result{RequeueAfter: 5 * time.Minute}, nil</span>
+}
+
+// convertRules converts our CRD rules to OCI ingress and egress rule types
+func (r *OCISecurityPolicyReconciler) convertRules(rules []computev1alpha1.SecurityRule) ([]core.IngressSecurityRule, []core.EgressSecurityRule) <span class="cov8" title="1">{
+        var ingressRules []core.IngressSecurityRule
+        var egressRules []core.EgressSecurityRule
+
+        for _, rule := range rules </span><span class="cov8" title="1">{
+                ruleCopy := rule
+                if ruleCopy.Direction == computev1alpha1.SecurityRuleDirectionIngress </span><span class="cov8" title="1">{
+                        ingressRule := core.IngressSecurityRule{
+                                Protocol:    &amp;ruleCopy.Protocol,
+                                Source:      &amp;ruleCopy.Source,
+                                Description: &amp;ruleCopy.Description,
+                        }
+                        // Add TCP options if ports are specified
+                        if ruleCopy.MinPort != nil &amp;&amp; ruleCopy.MaxPort != nil </span><span class="cov8" title="1">{
+                                minPort := int(*ruleCopy.MinPort)
+                                maxPort := int(*ruleCopy.MaxPort)
+                                ingressRule.TcpOptions = &amp;core.TcpOptions{
+                                        DestinationPortRange: &amp;core.PortRange{
+                                                Min: &amp;minPort,
+                                                Max: &amp;maxPort,
+                                        },
+                                }
+                        }</span>
+                        <span class="cov8" title="1">ingressRules = append(ingressRules, ingressRule)</span>
+                } else<span class="cov0" title="0"> {
+                        egressRule := core.EgressSecurityRule{
+                                Protocol:    &amp;ruleCopy.Protocol,
+                                Destination: &amp;ruleCopy.Destination,
+                                Description: &amp;ruleCopy.Description,
+                        }
+                        if ruleCopy.MinPort != nil &amp;&amp; ruleCopy.MaxPort != nil </span><span class="cov0" title="0">{
+                                minPort := int(*ruleCopy.MinPort)
+                                maxPort := int(*ruleCopy.MaxPort)
+                                egressRule.TcpOptions = &amp;core.TcpOptions{
+                                        DestinationPortRange: &amp;core.PortRange{
+                                                Min: &amp;minPort,
+                                                Max: &amp;maxPort,
+                                        },
+                                }
+                        }</span>
+                        <span class="cov0" title="0">egressRules = append(egressRules, egressRule)</span>
+                }
+        }
+
+        <span class="cov8" title="1">return ingressRules, egressRules</span>
+}
+
+// newVirtualNetworkClient creates a real OCI VCN client using default config.
+// In production this is called lazily if no client was injected.
+func newVirtualNetworkClient() (OCIVirtualNetworkClient, error) <span class="cov8" title="1">{
+        vcnClient, err := core.NewVirtualNetworkClientWithConfigurationProvider(
+                common.DefaultConfigProvider(),
+        )
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to create OCI VCN client: %w", err)
+        }</span>
+        <span class="cov8" title="1">return &amp;vcnClient, nil</span>
+}
+
+// SetupWithManager sets up the controller with the Manager.
+func (r *OCISecurityPolicyReconciler) SetupWithManager(mgr ctrl.Manager) error <span class="cov0" title="0">{
+        return ctrl.NewControllerManagedBy(mgr).
+                For(&amp;computev1alpha1.OCISecurityPolicy{}).
+                Named("ocisecuritypolicy").
+                Complete(r)
+}</span>
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">/*
+Copyright 2026.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package utils
+
+import (
+        "bufio"
+        "bytes"
+        "fmt"
+        "os"
+        "os/exec"
+        "strings"
+
+        . "github.com/onsi/ginkgo/v2" // nolint:revive,staticcheck
+)
+
+const (
+        certmanagerVersion = "v1.20.0"
+        certmanagerURLTmpl = "https://github.com/cert-manager/cert-manager/releases/download/%s/cert-manager.yaml"
+
+        defaultKindBinary  = "kind"
+        defaultKindCluster = "kind"
+)
+
+func warnError(err error) <span class="cov0" title="0">{
+        _, _ = fmt.Fprintf(GinkgoWriter, "warning: %v\n", err)
+}</span>
+
+// Run executes the provided command within this context
+func Run(cmd *exec.Cmd) (string, error) <span class="cov0" title="0">{
+        dir, _ := GetProjectDir()
+        cmd.Dir = dir
+
+        if err := os.Chdir(cmd.Dir); err != nil </span><span class="cov0" title="0">{
+                _, _ = fmt.Fprintf(GinkgoWriter, "chdir dir: %q\n", err)
+        }</span>
+
+        <span class="cov0" title="0">cmd.Env = append(os.Environ(), "GO111MODULE=on")
+        command := strings.Join(cmd.Args, " ")
+        _, _ = fmt.Fprintf(GinkgoWriter, "running: %q\n", command)
+        output, err := cmd.CombinedOutput()
+        if err != nil </span><span class="cov0" title="0">{
+                return string(output), fmt.Errorf("%q failed with error %q: %w", command, string(output), err)
+        }</span>
+
+        <span class="cov0" title="0">return string(output), nil</span>
+}
+
+// UninstallCertManager uninstalls the cert manager
+func UninstallCertManager() <span class="cov0" title="0">{
+        url := fmt.Sprintf(certmanagerURLTmpl, certmanagerVersion)
+        cmd := exec.Command("kubectl", "delete", "-f", url)
+        if _, err := Run(cmd); err != nil </span><span class="cov0" title="0">{
+                warnError(err)
+        }</span>
+
+        // Delete leftover leases in kube-system (not cleaned by default)
+        <span class="cov0" title="0">kubeSystemLeases := []string{
+                "cert-manager-cainjector-leader-election",
+                "cert-manager-controller",
+        }
+        for _, lease := range kubeSystemLeases </span><span class="cov0" title="0">{
+                cmd = exec.Command("kubectl", "delete", "lease", lease,
+                        "-n", "kube-system", "--ignore-not-found", "--force", "--grace-period=0")
+                if _, err := Run(cmd); err != nil </span><span class="cov0" title="0">{
+                        warnError(err)
+                }</span>
+        }
+}
+
+// InstallCertManager installs the cert manager bundle.
+func InstallCertManager() error <span class="cov0" title="0">{
+        url := fmt.Sprintf(certmanagerURLTmpl, certmanagerVersion)
+        cmd := exec.Command("kubectl", "apply", "-f", url)
+        if _, err := Run(cmd); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        // Wait for cert-manager-webhook to be ready, which can take time if cert-manager
+        // was re-installed after uninstalling on a cluster.
+        <span class="cov0" title="0">cmd = exec.Command("kubectl", "wait", "deployment.apps/cert-manager-webhook",
+                "--for", "condition=Available",
+                "--namespace", "cert-manager",
+                "--timeout", "5m",
+        )
+
+        _, err := Run(cmd)
+        return err</span>
+}
+
+// IsCertManagerCRDsInstalled checks if any Cert Manager CRDs are installed
+// by verifying the existence of key CRDs related to Cert Manager.
+func IsCertManagerCRDsInstalled() bool <span class="cov0" title="0">{
+        // List of common Cert Manager CRDs
+        certManagerCRDs := []string{
+                "certificates.cert-manager.io",
+                "issuers.cert-manager.io",
+                "clusterissuers.cert-manager.io",
+                "certificaterequests.cert-manager.io",
+                "orders.acme.cert-manager.io",
+                "challenges.acme.cert-manager.io",
+        }
+
+        // Execute the kubectl command to get all CRDs
+        cmd := exec.Command("kubectl", "get", "crds")
+        output, err := Run(cmd)
+        if err != nil </span><span class="cov0" title="0">{
+                return false
+        }</span>
+
+        // Check if any of the Cert Manager CRDs are present
+        <span class="cov0" title="0">crdList := GetNonEmptyLines(output)
+        for _, crd := range certManagerCRDs </span><span class="cov0" title="0">{
+                for _, line := range crdList </span><span class="cov0" title="0">{
+                        if strings.Contains(line, crd) </span><span class="cov0" title="0">{
+                                return true
+                        }</span>
+                }
+        }
+
+        <span class="cov0" title="0">return false</span>
+}
+
+// LoadImageToKindClusterWithName loads a local docker image to the kind cluster
+func LoadImageToKindClusterWithName(name string) error <span class="cov0" title="0">{
+        cluster := defaultKindCluster
+        if v, ok := os.LookupEnv("KIND_CLUSTER"); ok </span><span class="cov0" title="0">{
+                cluster = v
+        }</span>
+        <span class="cov0" title="0">kindOptions := []string{"load", "docker-image", name, "--name", cluster}
+        kindBinary := defaultKindBinary
+        if v, ok := os.LookupEnv("KIND"); ok </span><span class="cov0" title="0">{
+                kindBinary = v
+        }</span>
+        <span class="cov0" title="0">cmd := exec.Command(kindBinary, kindOptions...)
+        _, err := Run(cmd)
+        return err</span>
+}
+
+// GetNonEmptyLines converts given command output string into individual objects
+// according to line breakers, and ignores the empty elements in it.
+func GetNonEmptyLines(output string) []string <span class="cov0" title="0">{
+        var res []string
+        elements := strings.SplitSeq(output, "\n")
+        for element := range elements </span><span class="cov0" title="0">{
+                if element != "" </span><span class="cov0" title="0">{
+                        res = append(res, element)
+                }</span>
+        }
+
+        <span class="cov0" title="0">return res</span>
+}
+
+// GetProjectDir will return the directory where the project is
+func GetProjectDir() (string, error) <span class="cov0" title="0">{
+        wd, err := os.Getwd()
+        if err != nil </span><span class="cov0" title="0">{
+                return wd, fmt.Errorf("failed to get current working directory: %w", err)
+        }</span>
+        <span class="cov0" title="0">wd = strings.ReplaceAll(wd, "/test/e2e", "")
+        return wd, nil</span>
+}
+
+// UncommentCode searches for target in the file and remove the comment prefix
+// of the target content. The target content may span multiple lines.
+func UncommentCode(filename, target, prefix string) error <span class="cov0" title="0">{
+        // false positive
+        // nolint:gosec
+        content, err := os.ReadFile(filename)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to read file %q: %w", filename, err)
+        }</span>
+        <span class="cov0" title="0">strContent := string(content)
+
+        idx := strings.Index(strContent, target)
+        if idx &lt; 0 </span><span class="cov0" title="0">{
+                return fmt.Errorf("unable to find the code %q to be uncommented", target)
+        }</span>
+
+        <span class="cov0" title="0">out := new(bytes.Buffer)
+        _, err = out.Write(content[:idx])
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to write to output: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">scanner := bufio.NewScanner(bytes.NewBufferString(target))
+        if !scanner.Scan() </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+        <span class="cov0" title="0">for </span><span class="cov0" title="0">{
+                if _, err = out.WriteString(strings.TrimPrefix(scanner.Text(), prefix)); err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("failed to write to output: %w", err)
+                }</span>
+                // Avoid writing a newline in case the previous line was the last in target.
+                <span class="cov0" title="0">if !scanner.Scan() </span><span class="cov0" title="0">{
+                        break</span>
+                }
+                <span class="cov0" title="0">if _, err = out.WriteString("\n"); err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("failed to write to output: %w", err)
+                }</span>
+        }
+
+        <span class="cov0" title="0">if _, err = out.Write(content[idx+len(target):]); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to write to output: %w", err)
+        }</span>
+
+        // false positive
+        // nolint:gosec
+        <span class="cov0" title="0">if err = os.WriteFile(filename, out.Bytes(), 0644); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to write file %q: %w", filename, err)
+        }</span>
+
+        <span class="cov0" title="0">return nil</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

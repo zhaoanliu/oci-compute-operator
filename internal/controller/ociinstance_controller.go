@@ -45,7 +45,8 @@ const (
 // OCIInstanceReconciler reconciles a OCIInstance object
 type OCIInstanceReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme        *runtime.Scheme
+	ComputeClient OCIComputeClient
 }
 
 // +kubebuilder:rbac:groups=compute.nvcne-demo.io,resources=ociinstances,verbs=get;list;watch;create;update;patch;delete
@@ -92,12 +93,16 @@ func (r *OCIInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, nil
 	}
 
-	// Step 4: Create OCI compute client
-	computeClient, err := r.newComputeClient()
-	if err != nil {
-		log.Error(err, "Failed to create OCI compute client")
-		return setFailedStatus(ctx, r.Client, instance, fmt.Sprintf("Failed to create OCI client: %v", err))
+	// Step 4: Use injected OCI compute client
+	if r.ComputeClient == nil {
+		var err error
+		r.ComputeClient, err = newComputeClient()
+		if err != nil {
+			log.Error(err, "Failed to create OCI compute client")
+			return setFailedStatus(ctx, r.Client, instance, fmt.Sprintf("Failed to create OCI client: %v", err))
+		}
 	}
+	computeClient := r.ComputeClient
 
 	// Step 5: Check if OCI instance already exists
 	if instance.Status.InstanceID != "" {
@@ -121,13 +126,18 @@ func (r *OCIInstanceReconciler) handleDeletion(ctx context.Context, instance *co
 	if instance.Status.InstanceID != "" {
 		log.Info("Terminating OCI instance", "instanceId", instance.Status.InstanceID)
 
-		computeClient, err := r.newComputeClient()
-		if err != nil {
-			log.Error(err, "Failed to create OCI client during deletion")
-			return ctrl.Result{}, err
+		// Use injected client, or create one if not injected
+		computeClient := r.ComputeClient
+		if computeClient == nil {
+			var err error
+			computeClient, err = newComputeClient()
+			if err != nil {
+				log.Error(err, "Failed to create OCI client during deletion")
+				return ctrl.Result{}, err
+			}
 		}
 
-		_, err = computeClient.TerminateInstance(ctx, core.TerminateInstanceRequest{
+		_, err := computeClient.TerminateInstance(ctx, core.TerminateInstanceRequest{
 			InstanceId: &instance.Status.InstanceID,
 		})
 		if err != nil {
@@ -150,7 +160,7 @@ func (r *OCIInstanceReconciler) handleDeletion(ctx context.Context, instance *co
 }
 
 // reconcileNew provisions a brand new OCI compute instance
-func (r *OCIInstanceReconciler) reconcileNew(ctx context.Context, instance *computev1alpha1.OCIInstance, computeClient core.ComputeClient) (ctrl.Result, error) {
+func (r *OCIInstanceReconciler) reconcileNew(ctx context.Context, instance *computev1alpha1.OCIInstance, computeClient OCIComputeClient) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 	log.Info("Provisioning new OCI instance", "displayName", instance.Spec.DisplayName)
 
@@ -217,7 +227,7 @@ func (r *OCIInstanceReconciler) reconcileNew(ctx context.Context, instance *comp
 }
 
 // reconcileExisting checks and syncs the status of an already-provisioned OCI instance
-func (r *OCIInstanceReconciler) reconcileExisting(ctx context.Context, instance *computev1alpha1.OCIInstance, computeClient core.ComputeClient) (ctrl.Result, error) {
+func (r *OCIInstanceReconciler) reconcileExisting(ctx context.Context, instance *computev1alpha1.OCIInstance, computeClient OCIComputeClient) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 	log.Info("Checking existing OCI instance", "instanceId", instance.Status.InstanceID)
 
@@ -269,15 +279,16 @@ func (r *OCIInstanceReconciler) reconcileExisting(ctx context.Context, instance 
 	return ctrl.Result{RequeueAfter: requeueAfter}, nil
 }
 
-// newComputeClient creates an OCI compute client using the default config provider
-func (r *OCIInstanceReconciler) newComputeClient() (core.ComputeClient, error) {
+// newComputeClient creates a real OCI compute client using default config.
+// In production this is called lazily if no client was injected.
+func newComputeClient() (OCIComputeClient, error) {
 	computeClient, err := core.NewComputeClientWithConfigurationProvider(
 		common.DefaultConfigProvider(),
 	)
 	if err != nil {
-		return core.ComputeClient{}, fmt.Errorf("failed to create OCI compute client: %w", err)
+		return nil, fmt.Errorf("failed to create OCI compute client: %w", err)
 	}
-	return computeClient, nil
+	return &computeClient, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

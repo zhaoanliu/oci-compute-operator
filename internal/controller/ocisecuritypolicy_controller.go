@@ -44,7 +44,8 @@ const (
 // OCISecurityPolicyReconciler reconciles a OCISecurityPolicy object
 type OCISecurityPolicyReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme               *runtime.Scheme
+	VirtualNetworkClient OCIVirtualNetworkClient
 }
 
 // +kubebuilder:rbac:groups=compute.nvcne-demo.io,resources=ocisecuritypolicies,verbs=get;list;watch;create;update;patch;delete
@@ -89,12 +90,16 @@ func (r *OCISecurityPolicyReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		return ctrl.Result{}, nil
 	}
 
-	// Step 4: Create OCI virtual network client
-	vcnClient, err := r.newVirtualNetworkClient()
-	if err != nil {
-		log.Error(err, "Failed to create OCI VCN client")
-		return setFailedStatus(ctx, r.Client, policy, fmt.Sprintf("Failed to create OCI client: %v", err))
+	// Step 4: Use injected OCI virtual network client
+	if r.VirtualNetworkClient == nil {
+		var err error
+		r.VirtualNetworkClient, err = newVirtualNetworkClient()
+		if err != nil {
+			log.Error(err, "Failed to create OCI VCN client")
+			return setFailedStatus(ctx, r.Client, policy, fmt.Sprintf("Failed to create OCI client: %v", err))
+		}
 	}
+	vcnClient := r.VirtualNetworkClient
 
 	// Step 5: Check if security list already exists
 	if policy.Status.SecurityListID != "" {
@@ -117,13 +122,17 @@ func (r *OCISecurityPolicyReconciler) handleDeletion(ctx context.Context, policy
 	if policy.Status.SecurityListID != "" {
 		log.Info("Deleting OCI security list", "securityListId", policy.Status.SecurityListID)
 
-		vcnClient, err := r.newVirtualNetworkClient()
-		if err != nil {
-			log.Error(err, "Failed to create OCI VCN client during deletion")
-			return ctrl.Result{}, err
+		vcnClient := r.VirtualNetworkClient
+		if vcnClient == nil {
+			var err error
+			vcnClient, err = newVirtualNetworkClient()
+			if err != nil {
+				log.Error(err, "Failed to create OCI VCN client during deletion")
+				return ctrl.Result{}, err
+			}
 		}
 
-		_, err = vcnClient.DeleteSecurityList(ctx, core.DeleteSecurityListRequest{
+		_, err := vcnClient.DeleteSecurityList(ctx, core.DeleteSecurityListRequest{
 			SecurityListId: &policy.Status.SecurityListID,
 		})
 		if err != nil {
@@ -146,7 +155,7 @@ func (r *OCISecurityPolicyReconciler) handleDeletion(ctx context.Context, policy
 }
 
 // reconcileNew creates a brand new OCI security list
-func (r *OCISecurityPolicyReconciler) reconcileNew(ctx context.Context, policy *computev1alpha1.OCISecurityPolicy, vcnClient core.VirtualNetworkClient) (ctrl.Result, error) {
+func (r *OCISecurityPolicyReconciler) reconcileNew(ctx context.Context, policy *computev1alpha1.OCISecurityPolicy, vcnClient OCIVirtualNetworkClient) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 	log.Info("Creating new OCI security list", "displayName", policy.Spec.DisplayName)
 
@@ -191,7 +200,7 @@ func (r *OCISecurityPolicyReconciler) reconcileNew(ctx context.Context, policy *
 }
 
 // reconcileExisting syncs the state of an already-created OCI security list
-func (r *OCISecurityPolicyReconciler) reconcileExisting(ctx context.Context, policy *computev1alpha1.OCISecurityPolicy, vcnClient core.VirtualNetworkClient) (ctrl.Result, error) {
+func (r *OCISecurityPolicyReconciler) reconcileExisting(ctx context.Context, policy *computev1alpha1.OCISecurityPolicy, vcnClient OCIVirtualNetworkClient) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 	log.Info("Checking existing OCI security list", "securityListId", policy.Status.SecurityListID)
 
@@ -281,15 +290,16 @@ func (r *OCISecurityPolicyReconciler) convertRules(rules []computev1alpha1.Secur
 	return ingressRules, egressRules
 }
 
-// newVirtualNetworkClient creates an OCI VCN client using the default config provider
-func (r *OCISecurityPolicyReconciler) newVirtualNetworkClient() (core.VirtualNetworkClient, error) {
+// newVirtualNetworkClient creates a real OCI VCN client using default config.
+// In production this is called lazily if no client was injected.
+func newVirtualNetworkClient() (OCIVirtualNetworkClient, error) {
 	vcnClient, err := core.NewVirtualNetworkClientWithConfigurationProvider(
 		common.DefaultConfigProvider(),
 	)
 	if err != nil {
-		return core.VirtualNetworkClient{}, fmt.Errorf("failed to create OCI VCN client: %w", err)
+		return nil, fmt.Errorf("failed to create OCI VCN client: %w", err)
 	}
-	return vcnClient, nil
+	return &vcnClient, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
