@@ -1,135 +1,253 @@
-# oci-compute-operator
-// TODO(user): Add simple overview of use/purpose
+# OCI Compute Operator
 
-## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+A production-grade Kubernetes operator written in Go that manages the lifecycle of Oracle Cloud Infrastructure (OCI) compute instances and security policies as Kubernetes custom resources.
+
+Built to demonstrate cloud-native platform engineering patterns relevant to large-scale AI infrastructure — including the operator pattern, CRD design, OCI API integration, and comprehensive testing with mock injection.
+
+---
+
+## Overview
+
+This operator bridges Kubernetes and Oracle Cloud Infrastructure, allowing platform teams to manage OCI resources declaratively using standard Kubernetes tooling (`kubectl`, GitOps, etc.).
+
+```bash
+kubectl apply -f my-instance.yaml   # provisions a real OCI compute instance
+kubectl delete ociinstance my-vm    # terminates it safely via finalizer
+kubectl get ociinstances            # shows live status from OCI
+```
+
+### Custom Resources
+
+**`OCIInstance`** — manages OCI compute instance lifecycle:
+- Provisions instances via OCI Compute API
+- Polls until `Running`, syncs status back to Kubernetes
+- Terminates instances safely on deletion using finalizers
+- Supports flex shapes with configurable OCPUs and memory
+- Guards against infinite retry loops on failure
+
+**`OCISecurityPolicy`** — manages OCI security list lifecycle:
+- Creates and manages OCI VCN security lists
+- Supports both ingress and egress rules with port ranges
+- Full lifecycle management including safe deletion
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Kubernetes Cluster                    │
+│                                                         │
+│   OCIInstance CR ──► OCIInstanceReconciler              │
+│   OCISecurityPolicy ──► OCISecurityPolicyReconciler     │
+│                              │                          │
+└──────────────────────────────┼──────────────────────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │   OCI APIs          │
+                    │  - Compute API      │
+                    │  - VCN API          │
+                    └─────────────────────┘
+```
+
+### Key Design Decisions
+
+**Level-triggered reconciliation** — the reconciler always compares desired state (Spec) against actual state (OCI) and drives toward convergence, regardless of what event triggered it. This makes the operator self-healing and resilient to missed events.
+
+**Finalizer pattern** — resources carry a finalizer that prevents Kubernetes from deleting them until the corresponding OCI resource is terminated. This prevents orphaned cloud resources.
+
+**Failed phase guard** — once a resource enters `Failed` phase, the operator stops retrying until the user changes the spec (incrementing the resource generation). This prevents infinite OCI API call loops on persistent errors.
+
+**Dependency injection for testability** — OCI clients are defined as interfaces and injected into reconcilers, allowing tests to use mock implementations without real OCI credentials. This enables comprehensive unit testing of all reconciliation paths.
+
+**Shared `FailableResource` interface** — both controllers implement a common interface for setting failure status, eliminating code duplication between the two reconcilers.
+
+---
+
+## Project Structure
+
+```
+.
+├── api/v1alpha1/
+│   ├── ociinstance_types.go          # OCIInstance CRD schema and lifecycle phases
+│   ├── ocisecuritypolicy_types.go    # OCISecurityPolicy CRD schema
+│   └── zz_generated.deepcopy.go      # auto-generated
+├── internal/controller/
+│   ├── ociinstance_controller.go          # OCIInstance reconciliation loop
+│   ├── ocisecuritypolicy_controller.go    # OCISecurityPolicy reconciliation loop
+│   ├── oci_client.go                      # OCI client interfaces
+│   ├── mock_oci_clients.go                # mock implementations for tests
+│   ├── failable_resource.go               # shared interface for error handling
+│   ├── ociinstance_controller_test.go          # CRD validation and finalizer tests
+│   ├── ocisecuritypolicy_controller_test.go    # security policy validation tests
+│   ├── ociinstance_controller_oci_test.go      # OCI lifecycle mock tests
+│   └── ocisecuritypolicy_controller_oci_test.go # security policy mock tests
+├── config/crd/bases/                 # generated CRD YAML manifests
+└── config/rbac/                      # generated RBAC manifests
+```
+
+---
 
 ## Getting Started
 
 ### Prerequisites
-- go version v1.24.6+
-- docker version 17.03+.
-- kubectl version v1.11.3+.
-- Access to a Kubernetes v1.11.3+ cluster.
 
-### To Deploy on the cluster
-**Build and push your image to the location specified by `IMG`:**
+- Go 1.21+
+- Docker Desktop
+- kubectl v1.25+
+- kind (for local development)
+- OCI account with API key configured at `~/.oci/config`
+- Kubebuilder v4+
 
-```sh
-make docker-build docker-push IMG=<some-registry>/oci-compute-operator:tag
+### Local Development Setup
+
+**1. Create a local Kubernetes cluster:**
+```bash
+kind create cluster --name oci-operator-dev
 ```
 
-**NOTE:** This image ought to be published in the personal registry you specified.
-And it is required to have access to pull the image from the working environment.
-Make sure you have the proper permission to the registry if the above commands don’t work.
-
-**Install the CRDs into the cluster:**
-
-```sh
+**2. Install CRDs:**
+```bash
 make install
 ```
 
-**Deploy the Manager to the cluster with the image specified by `IMG`:**
-
-```sh
-make deploy IMG=<some-registry>/oci-compute-operator:tag
+**3. Run the operator locally:**
+```bash
+make run
 ```
 
-> **NOTE**: If you encounter RBAC errors, you may need to grant yourself cluster-admin
-privileges or be logged in as admin.
-
-**Create instances of your solution**
-You can apply the samples (examples) from the config/sample:
-
-```sh
-kubectl apply -k config/samples/
+**4. Apply a sample OCIInstance:**
+```yaml
+apiVersion: compute.nvcne-demo.io/v1alpha1
+kind: OCIInstance
+metadata:
+  name: my-instance
+  namespace: default
+spec:
+  compartmentId: "ocid1.compartment.oc1..<your-compartment-id>"
+  displayName: "my-instance"
+  shape: "VM.Standard.E2.1.Micro"
+  imageId: "ocid1.image.oc1..<your-image-id>"
+  availabilityDomain: "bAuY:US-SANJOSE-1-AD-1"
+  subnetId: "ocid1.subnet.oc1..<your-subnet-id>"
+  freeformTags:
+    env: "dev"
+    team: "platform"
 ```
 
->**NOTE**: Ensure that the samples has default values to test it out.
-
-### To Uninstall
-**Delete the instances (CRs) from the cluster:**
-
-```sh
-kubectl delete -k config/samples/
+```bash
+kubectl apply -f my-instance.yaml
+kubectl get ociinstances --watch
 ```
 
-**Delete the APIs(CRDs) from the cluster:**
-
-```sh
-make uninstall
+**5. Apply a sample OCISecurityPolicy:**
+```yaml
+apiVersion: compute.nvcne-demo.io/v1alpha1
+kind: OCISecurityPolicy
+metadata:
+  name: my-security-policy
+  namespace: default
+spec:
+  compartmentId: "ocid1.compartment.oc1..<your-compartment-id>"
+  vcnId: "ocid1.vcn.oc1..<your-vcn-id>"
+  displayName: "my-security-policy"
+  rules:
+    - direction: "INGRESS"
+      protocol: "6"
+      source: "0.0.0.0/0"
+      minPort: 443
+      maxPort: 443
+      description: "Allow HTTPS inbound"
+    - direction: "EGRESS"
+      protocol: "all"
+      destination: "0.0.0.0/0"
+      description: "Allow all outbound"
 ```
 
-**UnDeploy the controller from the cluster:**
-
-```sh
-make undeploy
+```bash
+kubectl apply -f my-security-policy.yaml
+kubectl get ocisecuritypolicies --watch
 ```
 
-## Project Distribution
+---
 
-Following the options to release and provide this solution to the users.
+## Testing
 
-### By providing a bundle with all YAML files
+```bash
+# Run all tests with coverage
+make test
 
-1. Build the installer for the image built and published in the registry:
+# Run linter
+make lint
 
-```sh
-make build-installer IMG=<some-registry>/oci-compute-operator:tag
+# View coverage report
+go tool cover -html=cover.out -o coverage.html
+open coverage.html
 ```
 
-**NOTE:** The makefile target mentioned above generates an 'install.yaml'
-file in the dist directory. This file contains all the resources built
-with Kustomize, which are necessary to install this project without its
-dependencies.
+Test coverage: **71%**
 
-2. Using the installer
+### Test Approach
 
-Users can just run 'kubectl apply -f <URL for YAML BUNDLE>' to install
-the project, i.e.:
+- **CRD validation tests** — verify Kubernetes rejects invalid resources (empty required fields, strings >255 chars, invalid enum values, port ranges out of bounds)
+- **Finalizer and idempotency tests** — verify finalizers are added exactly once and reconciliation is idempotent
+- **Mock-based OCI tests** — inject fake OCI clients to test all reconciliation paths without real cloud credentials, including provisioning, status syncing, lifecycle state transitions, and deletion
 
-```sh
-kubectl apply -f https://raw.githubusercontent.com/<org>/oci-compute-operator/<tag or branch>/dist/install.yaml
+---
+
+## OCI Instance Lifecycle
+
+```mermaid
+graph TD
+    A[kubectl apply] --> B[Pending]
+    B --> C[Provisioning\nOCI LaunchInstance called]
+    C --> D[Running\nOCI reports RUNNING]
+    D --> E[Terminating\nkubectl delete]
+    E --> F[Terminated]
+    C --> G[Failed\nno retry until spec changes]
+    D --> G
 ```
 
-### By providing a Helm Chart
+## OCI Security Policy Lifecycle
 
-1. Build the chart using the optional helm plugin
-
-```sh
-kubebuilder edit --plugins=helm/v2-alpha
+```mermaid
+graph TD
+    A[kubectl apply] --> B[Creating\nOCI CreateSecurityList called]
+    B --> C[Active\nOCI reports AVAILABLE]
+    C --> D[Deleting\nkubectl delete]
+    D --> E[Deleted]
+    B --> F[Failed\nno retry until spec changes]
+    C --> F
 ```
 
-2. See that a chart was generated under 'dist/chart', and users
-can obtain this solution from there.
+---
 
-**NOTE:** If you change the project, you need to update the Helm Chart
-using the same command above to sync the latest changes. Furthermore,
-if you create webhooks, you need to use the above command with
-the '--force' flag and manually ensure that any custom configuration
-previously added to 'dist/chart/values.yaml' or 'dist/chart/manager/manager.yaml'
-is manually re-applied afterwards.
+## OCI Authentication
 
-## Contributing
-// TODO(user): Add detailed information on how you would like others to contribute to this project
+This operator uses the OCI SDK default configuration provider, which reads from `~/.oci/config`:
 
-**NOTE:** Run `make help` for more information on all potential `make` targets
+```ini
+[DEFAULT]
+user=ocid1.user.oc1..<your-user-id>
+fingerprint=<your-key-fingerprint>
+tenancy=ocid1.tenancy.oc1..<your-tenancy-id>
+region=us-sanjose-1
+key_file=~/.oci/oci_api_key.pem
+```
 
-More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
+See [OCI SDK Authentication](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdkconfig.htm) for setup instructions.
+
+---
+
+## Certification
+
+OCI Generative AI Professional certification in progress.
+
+---
 
 ## License
 
 Copyright 2026.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
+Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.
