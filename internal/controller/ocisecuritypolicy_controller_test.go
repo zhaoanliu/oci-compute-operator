@@ -30,8 +30,11 @@ import (
 )
 
 // int32Ptr is a helper to get a pointer to an int32 value
+//
+//nolint:gocritic
+//go:fix inline
 func int32Ptr(i int32) *int32 {
-	return &i
+	return new(i)
 }
 
 // newTestOCISecurityPolicy is a helper that returns a valid OCISecurityPolicy for testing
