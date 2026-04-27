@@ -54,8 +54,15 @@ type OCIInstanceReconciler struct {
 // +kubebuilder:rbac:groups=compute.nvcne-demo.io,resources=ociinstances/finalizers,verbs=update
 
 // Reconcile moves the current state of the OCIInstance closer to the desired state.
-func (r *OCIInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *OCIInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (res ctrl.Result, err error) {
 	log := logf.FromContext(ctx)
+	defer func() {
+		outcome := metricResultSuccess
+		if err != nil {
+			outcome = metricResultError
+		}
+		reconcileTotal.WithLabelValues("ociinstance", outcome).Inc()
+	}()
 
 	// Step 1: Fetch the OCIInstance resource
 	instance := &computev1alpha1.OCIInstance{}
@@ -137,8 +144,11 @@ func (r *OCIInstanceReconciler) handleDeletion(ctx context.Context, instance *co
 			}
 		}
 
-		_, err := computeClient.TerminateInstance(ctx, core.TerminateInstanceRequest{
-			InstanceId: &instance.Status.InstanceID,
+		err := measureOCICall("ociinstance", "terminate", func() error {
+			_, e := computeClient.TerminateInstance(ctx, core.TerminateInstanceRequest{
+				InstanceId: &instance.Status.InstanceID,
+			})
+			return e
 		})
 		if err != nil {
 			log.Error(err, "Failed to terminate OCI instance")
@@ -166,6 +176,7 @@ func (r *OCIInstanceReconciler) reconcileNew(ctx context.Context, instance *comp
 
 	// Set status to Provisioning
 	instance.Status.Phase = computev1alpha1.InstancePhaseProvisioning
+	phaseTransitions.WithLabelValues("ociinstance", string(computev1alpha1.InstancePhaseProvisioning)).Inc()
 	if err := r.Status().Update(ctx, instance); err != nil {
 		log.Error(err, "Failed to update status to Provisioning")
 		return ctrl.Result{}, err
@@ -202,11 +213,16 @@ func (r *OCIInstanceReconciler) reconcileNew(ctx context.Context, instance *comp
 	}
 
 	// Call OCI API to launch the instance
-	response, err := computeClient.LaunchInstance(ctx, core.LaunchInstanceRequest{
-		LaunchInstanceDetails: launchDetails,
-	})
-	if err != nil {
+	var response core.LaunchInstanceResponse
+	if err := measureOCICall("ociinstance", "launch", func() error {
+		var e error
+		response, e = computeClient.LaunchInstance(ctx, core.LaunchInstanceRequest{
+			LaunchInstanceDetails: launchDetails,
+		})
+		return e
+	}); err != nil {
 		log.Error(err, "Failed to launch OCI instance")
+		phaseTransitions.WithLabelValues("ociinstance", string(computev1alpha1.InstancePhaseFailed)).Inc()
 		return setFailedStatus(ctx, r.Client, instance, fmt.Sprintf("Failed to launch instance: %v", err))
 	}
 
@@ -232,10 +248,14 @@ func (r *OCIInstanceReconciler) reconcileExisting(ctx context.Context, instance 
 	log.Info("Checking existing OCI instance", "instanceId", instance.Status.InstanceID)
 
 	// Fetch current state from OCI
-	response, err := computeClient.GetInstance(ctx, core.GetInstanceRequest{
-		InstanceId: &instance.Status.InstanceID,
-	})
-	if err != nil {
+	var response core.GetInstanceResponse
+	if err := measureOCICall("ociinstance", "get", func() error {
+		var e error
+		response, e = computeClient.GetInstance(ctx, core.GetInstanceRequest{
+			InstanceId: &instance.Status.InstanceID,
+		})
+		return e
+	}); err != nil {
 		log.Error(err, "Failed to get OCI instance state")
 		return ctrl.Result{RequeueAfter: requeueAfter}, err
 	}
@@ -246,9 +266,11 @@ func (r *OCIInstanceReconciler) reconcileExisting(ctx context.Context, instance 
 	switch ociInstance.LifecycleState {
 	case core.InstanceLifecycleStateRunning:
 		instance.Status.Phase = computev1alpha1.InstancePhaseRunning
+		phaseTransitions.WithLabelValues("ociinstance", string(computev1alpha1.InstancePhaseRunning)).Inc()
 	case core.InstanceLifecycleStateProvisioning,
 		core.InstanceLifecycleStateStarting:
 		instance.Status.Phase = computev1alpha1.InstancePhaseProvisioning
+		phaseTransitions.WithLabelValues("ociinstance", string(computev1alpha1.InstancePhaseProvisioning)).Inc()
 		// Still provisioning - requeue to check again
 		if err := r.Status().Update(ctx, instance); err != nil {
 			return ctrl.Result{}, err
@@ -256,10 +278,13 @@ func (r *OCIInstanceReconciler) reconcileExisting(ctx context.Context, instance 
 		return ctrl.Result{RequeueAfter: requeueAfter}, nil
 	case core.InstanceLifecycleStateTerminating:
 		instance.Status.Phase = computev1alpha1.InstancePhaseTerminating
+		phaseTransitions.WithLabelValues("ociinstance", string(computev1alpha1.InstancePhaseTerminating)).Inc()
 	case core.InstanceLifecycleStateTerminated:
 		instance.Status.Phase = computev1alpha1.InstancePhaseTerminated
+		phaseTransitions.WithLabelValues("ociinstance", string(computev1alpha1.InstancePhaseTerminated)).Inc()
 	default:
 		instance.Status.Phase = computev1alpha1.InstancePhaseFailed
+		phaseTransitions.WithLabelValues("ociinstance", string(computev1alpha1.InstancePhaseFailed)).Inc()
 	}
 
 	instance.Status.ObservedGeneration = instance.Generation
