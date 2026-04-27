@@ -2,7 +2,7 @@
 
 A production-grade Kubernetes operator written in Go that manages the lifecycle of Oracle Cloud Infrastructure (OCI) compute instances and security policies as Kubernetes custom resources.
 
-Built to demonstrate cloud-native platform engineering patterns relevant to large-scale AI infrastructure — including the operator pattern, CRD design, OCI API integration, and comprehensive testing with mock injection.
+Built to demonstrate cloud-native platform engineering patterns relevant to large-scale AI infrastructure — including the operator pattern, CRD design, OCI API integration, Prometheus observability, and comprehensive testing with mock injection.
 
 ---
 
@@ -49,6 +49,13 @@ kubectl get ociinstances            # shows live status from OCI
                     │  - Compute API      │
                     │  - VCN API          │
                     └─────────────────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │   Observability     │
+                    │  - Prometheus       │
+                    │  - Grafana          │
+                    └─────────────────────┘
 ```
 
 ### Key Design Decisions
@@ -63,6 +70,8 @@ kubectl get ociinstances            # shows live status from OCI
 
 **Shared `FailableResource` interface** — both controllers implement a common interface for setting failure status, eliminating code duplication between the two reconcilers.
 
+**Prometheus instrumentation** — every reconcile loop, OCI API call, and phase transition is measured and exposed as Prometheus metrics, enabling production observability out of the box.
+
 ---
 
 ## Project Structure
@@ -70,12 +79,13 @@ kubectl get ociinstances            # shows live status from OCI
 ```
 .
 ├── api/v1alpha1/
-│   ├── ociinstance_types.go          # OCIInstance CRD schema and lifecycle phases
-│   ├── ocisecuritypolicy_types.go    # OCISecurityPolicy CRD schema
-│   └── zz_generated.deepcopy.go      # auto-generated
+│   ├── ociinstance_types.go               # OCIInstance CRD schema and lifecycle phases
+│   ├── ocisecuritypolicy_types.go         # OCISecurityPolicy CRD schema
+│   └── zz_generated.deepcopy.go           # auto-generated
 ├── internal/controller/
 │   ├── ociinstance_controller.go          # OCIInstance reconciliation loop
 │   ├── ocisecuritypolicy_controller.go    # OCISecurityPolicy reconciliation loop
+│   ├── metrics.go                         # Prometheus metrics registration
 │   ├── oci_client.go                      # OCI client interfaces
 │   ├── mock_oci_clients.go                # mock implementations for tests
 │   ├── failable_resource.go               # shared interface for error handling
@@ -83,8 +93,14 @@ kubectl get ociinstances            # shows live status from OCI
 │   ├── ocisecuritypolicy_controller_test.go    # security policy validation tests
 │   ├── ociinstance_controller_oci_test.go      # OCI lifecycle mock tests
 │   └── ocisecuritypolicy_controller_oci_test.go # security policy mock tests
-├── config/crd/bases/                 # generated CRD YAML manifests
-└── config/rbac/                      # generated RBAC manifests
+├── monitoring/
+│   ├── docker-compose.yml                 # Prometheus + Grafana local stack
+│   ├── prometheus.yml                     # Prometheus scrape config
+│   └── grafana/
+│       ├── provisioning/                  # auto-provisioned datasource
+│       └── dashboards/                    # pre-built OCI operator dashboard
+├── config/crd/bases/                      # generated CRD YAML manifests
+└── config/rbac/                           # generated RBAC manifests
 ```
 
 ---
@@ -172,6 +188,44 @@ kubectl get ocisecuritypolicies --watch
 
 ---
 
+## Observability
+
+The operator exposes Prometheus metrics on `/metrics` and includes a pre-built Grafana dashboard for production observability.
+
+### Metrics
+
+| Metric | Type | Labels | Description |
+|--------|------|--------|-------------|
+| `oci_operator_reconcile_total` | Counter | `controller`, `result` | Total reconcile loops by outcome (success/error) |
+| `oci_operator_oci_api_call_duration_seconds` | Histogram | `controller`, `operation`, `result` | OCI API call latency (p50/p95) |
+| `oci_operator_phase_transitions_total` | Counter | `controller`, `phase` | Lifecycle phase transition counts |
+
+### Local Monitoring Stack
+
+Run the operator with metrics exposed:
+```bash
+go run ./cmd/main.go --metrics-bind-address=:8080 --metrics-secure=false
+```
+
+Start Prometheus and Grafana:
+```bash
+cd monitoring
+docker-compose up
+```
+
+- **Prometheus:** http://localhost:9090 — verify `oci-compute-operator` target is `UP`
+- **Grafana:** http://localhost:3000 (admin/admin) — open the **OCI Compute Operator** dashboard
+
+### Dashboard Panels
+
+- **Reconciliation Rate** — ops/sec by controller (ociinstance, ocisecuritypolicy)
+- **Reconciliation Error Rate** — error rate for alerting
+- **OCI API Call Duration** — p50/p95 latency per operation (launch, get, terminate, create_security_list)
+- **OCI API Call Rate** — throughput by operation and result
+- **Phase Transitions** — lifecycle state change rate
+
+---
+
 ## Testing
 
 ```bash
@@ -180,6 +234,9 @@ make test
 
 # Run linter
 make lint
+
+# Run E2E tests (creates a real kind cluster)
+make test-e2e
 
 # View coverage report
 go tool cover -html=cover.out -o coverage.html
@@ -193,6 +250,20 @@ Test coverage: **71%**
 - **CRD validation tests** — verify Kubernetes rejects invalid resources (empty required fields, strings >255 chars, invalid enum values, port ranges out of bounds)
 - **Finalizer and idempotency tests** — verify finalizers are added exactly once and reconciliation is idempotent
 - **Mock-based OCI tests** — inject fake OCI clients to test all reconciliation paths without real cloud credentials, including provisioning, status syncing, lifecycle state transitions, and deletion
+- **E2E tests** — deploy the real operator to a kind cluster and verify full reconciliation lifecycle including creation and deletion of both custom resource types
+
+---
+
+## CI/CD
+
+Four GitHub Actions workflows run on every push and pull request:
+
+| Workflow | Description |
+|----------|-------------|
+| **Tests** | Unit tests with coverage |
+| **Lint** | golangci-lint with auto-fix |
+| **Docker** | Multi-platform image build and smoke test |
+| **E2E Tests** | Full operator lifecycle on kind cluster |
 
 ---
 
@@ -237,6 +308,12 @@ key_file=~/.oci/oci_api_key.pem
 ```
 
 See [OCI SDK Authentication](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdkconfig.htm) for setup instructions.
+
+---
+
+## Development Notes
+
+This project was built using **AI pair programming** with Claude as an AI pair programmer — every architectural decision understood and owned. The Prometheus/Grafana monitoring stack was added via **agentic coding** with Claude Code.
 
 ---
 
