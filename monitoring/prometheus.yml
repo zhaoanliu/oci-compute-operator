@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: oci-compute-operator
+    # Scrapes the operator running locally.
+    # Start the operator with:
+    #   go run ./cmd/main.go --metrics-bind-address=:8080 --metrics-secure=false
+    static_configs:
+      - targets:
+          - host.docker.internal:8080

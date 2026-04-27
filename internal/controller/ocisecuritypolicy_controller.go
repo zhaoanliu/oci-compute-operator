@@ -53,8 +53,15 @@ type OCISecurityPolicyReconciler struct {
 // +kubebuilder:rbac:groups=compute.nvcne-demo.io,resources=ocisecuritypolicies/finalizers,verbs=update
 
 // Reconcile moves the current state of the OCISecurityPolicy closer to desired state.
-func (r *OCISecurityPolicyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *OCISecurityPolicyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (res ctrl.Result, err error) {
 	log := logf.FromContext(ctx)
+	defer func() {
+		outcome := metricResultSuccess
+		if err != nil {
+			outcome = metricResultError
+		}
+		reconcileTotal.WithLabelValues("ocisecuritypolicy", outcome).Inc()
+	}()
 
 	// Step 1: Fetch the OCISecurityPolicy resource
 	policy := &computev1alpha1.OCISecurityPolicy{}
@@ -132,8 +139,11 @@ func (r *OCISecurityPolicyReconciler) handleDeletion(ctx context.Context, policy
 			}
 		}
 
-		_, err := vcnClient.DeleteSecurityList(ctx, core.DeleteSecurityListRequest{
-			SecurityListId: &policy.Status.SecurityListID,
+		err := measureOCICall("ocisecuritypolicy", "delete_security_list", func() error {
+			_, e := vcnClient.DeleteSecurityList(ctx, core.DeleteSecurityListRequest{
+				SecurityListId: &policy.Status.SecurityListID,
+			})
+			return e
 		})
 		if err != nil {
 			log.Error(err, "Failed to delete OCI security list")
@@ -161,6 +171,7 @@ func (r *OCISecurityPolicyReconciler) reconcileNew(ctx context.Context, policy *
 
 	// Set status to Creating
 	policy.Status.Phase = computev1alpha1.SecurityPolicyPhaseCreating
+	phaseTransitions.WithLabelValues("ocisecuritypolicy", string(computev1alpha1.SecurityPolicyPhaseCreating)).Inc()
 	if err := r.Status().Update(ctx, policy); err != nil {
 		log.Error(err, "Failed to update status to Creating")
 		return ctrl.Result{}, err
@@ -170,24 +181,30 @@ func (r *OCISecurityPolicyReconciler) reconcileNew(ctx context.Context, policy *
 	ingressRules, egressRules := r.convertRules(policy.Spec.Rules)
 
 	// Call OCI API to create the security list
-	response, err := vcnClient.CreateSecurityList(ctx, core.CreateSecurityListRequest{
-		CreateSecurityListDetails: core.CreateSecurityListDetails{
-			CompartmentId:        &policy.Spec.CompartmentID,
-			VcnId:                &policy.Spec.VcnID,
-			DisplayName:          &policy.Spec.DisplayName,
-			IngressSecurityRules: ingressRules,
-			EgressSecurityRules:  egressRules,
-			FreeformTags:         policy.Spec.FreeformTags,
-		},
-	})
-	if err != nil {
+	var response core.CreateSecurityListResponse
+	if err := measureOCICall("ocisecuritypolicy", "create_security_list", func() error {
+		var e error
+		response, e = vcnClient.CreateSecurityList(ctx, core.CreateSecurityListRequest{
+			CreateSecurityListDetails: core.CreateSecurityListDetails{
+				CompartmentId:        &policy.Spec.CompartmentID,
+				VcnId:                &policy.Spec.VcnID,
+				DisplayName:          &policy.Spec.DisplayName,
+				IngressSecurityRules: ingressRules,
+				EgressSecurityRules:  egressRules,
+				FreeformTags:         policy.Spec.FreeformTags,
+			},
+		})
+		return e
+	}); err != nil {
 		log.Error(err, "Failed to create OCI security list")
+		phaseTransitions.WithLabelValues("ocisecuritypolicy", string(computev1alpha1.SecurityPolicyPhaseFailed)).Inc()
 		return setFailedStatus(ctx, r.Client, policy, fmt.Sprintf("Failed to create security list: %v", err))
 	}
 
 	// Update status with new security list ID
 	policy.Status.SecurityListID = *response.Id
 	policy.Status.Phase = computev1alpha1.SecurityPolicyPhaseActive
+	phaseTransitions.WithLabelValues("ocisecuritypolicy", string(computev1alpha1.SecurityPolicyPhaseActive)).Inc()
 	policy.Status.ObservedGeneration = policy.Generation
 
 	if err := r.Status().Update(ctx, policy); err != nil {
@@ -205,10 +222,14 @@ func (r *OCISecurityPolicyReconciler) reconcileExisting(ctx context.Context, pol
 	log.Info("Checking existing OCI security list", "securityListId", policy.Status.SecurityListID)
 
 	// Fetch current state from OCI
-	response, err := vcnClient.GetSecurityList(ctx, core.GetSecurityListRequest{
-		SecurityListId: &policy.Status.SecurityListID,
-	})
-	if err != nil {
+	var response core.GetSecurityListResponse
+	if err := measureOCICall("ocisecuritypolicy", "get_security_list", func() error {
+		var e error
+		response, e = vcnClient.GetSecurityList(ctx, core.GetSecurityListRequest{
+			SecurityListId: &policy.Status.SecurityListID,
+		})
+		return e
+	}); err != nil {
 		log.Error(err, "Failed to get OCI security list")
 		return ctrl.Result{RequeueAfter: securityPolicyRequeueAfter}, err
 	}
@@ -217,18 +238,23 @@ func (r *OCISecurityPolicyReconciler) reconcileExisting(ctx context.Context, pol
 	switch response.LifecycleState {
 	case core.SecurityListLifecycleStateAvailable:
 		policy.Status.Phase = computev1alpha1.SecurityPolicyPhaseActive
+		phaseTransitions.WithLabelValues("ocisecuritypolicy", string(computev1alpha1.SecurityPolicyPhaseActive)).Inc()
 	case core.SecurityListLifecycleStateProvisioning:
 		policy.Status.Phase = computev1alpha1.SecurityPolicyPhaseCreating
+		phaseTransitions.WithLabelValues("ocisecuritypolicy", string(computev1alpha1.SecurityPolicyPhaseCreating)).Inc()
 		if err := r.Status().Update(ctx, policy); err != nil {
 			return ctrl.Result{}, err
 		}
 		return ctrl.Result{RequeueAfter: securityPolicyRequeueAfter}, nil
 	case core.SecurityListLifecycleStateTerminating:
 		policy.Status.Phase = computev1alpha1.SecurityPolicyPhaseDeleting
+		phaseTransitions.WithLabelValues("ocisecuritypolicy", string(computev1alpha1.SecurityPolicyPhaseDeleting)).Inc()
 	case core.SecurityListLifecycleStateTerminated:
 		policy.Status.Phase = computev1alpha1.SecurityPolicyPhaseDeleted
+		phaseTransitions.WithLabelValues("ocisecuritypolicy", string(computev1alpha1.SecurityPolicyPhaseDeleted)).Inc()
 	default:
 		policy.Status.Phase = computev1alpha1.SecurityPolicyPhaseFailed
+		phaseTransitions.WithLabelValues("ocisecuritypolicy", string(computev1alpha1.SecurityPolicyPhaseFailed)).Inc()
 	}
 
 	policy.Status.ObservedGeneration = policy.Generation
