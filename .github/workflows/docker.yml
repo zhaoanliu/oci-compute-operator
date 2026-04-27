@@ -1,0 +1,23 @@
+name: Docker
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  docker:
+    name: Build and verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone the code
+        uses: actions/checkout@v4
+
+      - name: Build image
+        run: make docker-build IMG=oci-compute-operator:${{ github.sha }}
+
+      - name: Verify image exists
+        run: docker images | grep oci-compute-operator
+
+      - name: Smoke test
+        run: docker run --rm oci-compute-operator:${{ github.sha }} --help
