@@ -271,14 +271,117 @@ var _ = Describe("Manager", Ordered, func() {
 		// +kubebuilder:scaffold:e2e-webhooks-checks
 
 		// TODO: Customize the e2e test suite with scenarios specific to your project.
-		// Consider applying sample/CR(s) and check their status and/or verifying
-		// the reconciliation by using the metrics, i.e.:
-		// metricsOutput, err := getMetricsOutput()
-		// Expect(err).NotTo(HaveOccurred(), "Failed to retrieve logs from curl pod")
-		// Expect(metricsOutput).To(ContainSubstring(
-		//    fmt.Sprintf(`controller_runtime_reconcile_total{controller="%s",result="success"} 1`,
-		//    strings.ToLower(<Kind>),
-		// ))
+		It("should reconcile OCIInstance and OCISecurityPolicy resources", func() {
+			By("creating an OCIInstance resource")
+			cmd := exec.Command("kubectl", "apply", "-f", "config/samples/compute_v1alpha1_ociinstance.yaml")
+			_, err := utils.Run(cmd)
+			Expect(err).NotTo(HaveOccurred(), "Failed to create OCIInstance")
+
+			By("creating an OCISecurityPolicy resource")
+			cmd = exec.Command("kubectl", "apply", "-f", "config/samples/compute_v1alpha1_ocisecuritypolicy.yaml")
+			_, err = utils.Run(cmd)
+			Expect(err).NotTo(HaveOccurred(), "Failed to create OCISecurityPolicy")
+
+			By("waiting for OCIInstance to have a finalizer")
+			verifyInstanceFinalizer := func(g Gomega) {
+				cmd := exec.Command("kubectl", "get", "ociinstance", "ociinstance-sample",
+					"-o", "jsonpath={.metadata.finalizers[0]}")
+				output, err := utils.Run(cmd)
+				g.Expect(err).NotTo(HaveOccurred())
+				g.Expect(output).To(ContainSubstring("finalizer"),
+					"OCIInstance should have finalizer added by controller")
+			}
+			Eventually(verifyInstanceFinalizer, 2*time.Minute, time.Second).Should(Succeed())
+
+			By("waiting for OCISecurityPolicy to have a finalizer")
+			verifyPolicyFinalizer := func(g Gomega) {
+				cmd := exec.Command("kubectl", "get", "ocisecuritypolicy", "ocisecuritypolicy-sample",
+					"-o", "jsonpath={.metadata.finalizers[0]}")
+				output, err := utils.Run(cmd)
+				g.Expect(err).NotTo(HaveOccurred())
+				g.Expect(output).To(ContainSubstring("finalizer"),
+					"OCISecurityPolicy should have finalizer added by controller")
+			}
+			Eventually(verifyPolicyFinalizer, 2*time.Minute, time.Second).Should(Succeed())
+
+			By("waiting for OCIInstance to reach a terminal phase")
+			verifyInstancePhase := func(g Gomega) {
+				cmd := exec.Command("kubectl", "get", "ociinstance", "ociinstance-sample",
+					"-o", "jsonpath={.status.phase}")
+				output, err := utils.Run(cmd)
+				g.Expect(err).NotTo(HaveOccurred())
+				// With fake OCIDs the instance will reach Failed phase
+				// which confirms the controller reconciled and called OCI
+				g.Expect(output).To(Or(
+					Equal("Failed"),
+					Equal("Provisioning"),
+					Equal("Running"),
+				), "OCIInstance should have been reconciled")
+			}
+			Eventually(verifyInstancePhase, 2*time.Minute, time.Second).Should(Succeed())
+
+			By("waiting for OCISecurityPolicy to reach a terminal phase")
+			verifyPolicyPhase := func(g Gomega) {
+				cmd := exec.Command("kubectl", "get", "ocisecuritypolicy", "ocisecuritypolicy-sample",
+					"-o", "jsonpath={.status.phase}")
+				output, err := utils.Run(cmd)
+				g.Expect(err).NotTo(HaveOccurred())
+				g.Expect(output).To(Or(
+					Equal("Failed"),
+					Equal("Active"),
+					Equal("Creating"),
+				), "OCISecurityPolicy should have been reconciled")
+			}
+			Eventually(verifyPolicyPhase, 2*time.Minute, time.Second).Should(Succeed())
+
+			By("verifying controller logs show reconciliation activity")
+			verifyReconcileLogs := func(g Gomega) {
+				cmd := exec.Command("kubectl", "logs", controllerPodName, "-n", namespace)
+				output, err := utils.Run(cmd)
+				g.Expect(err).NotTo(HaveOccurred())
+				g.Expect(output).To(ContainSubstring("Adding finalizer"),
+					"Controller should have added finalizers")
+			}
+			Eventually(verifyReconcileLogs, 2*time.Minute, time.Second).Should(Succeed())
+
+			By("deleting the OCIInstance resource")
+			cmd = exec.Command("kubectl", "delete", "ociinstance", "ociinstance-sample")
+			_, err = utils.Run(cmd)
+			Expect(err).NotTo(HaveOccurred(), "Failed to delete OCIInstance")
+
+			By("deleting the OCISecurityPolicy resource")
+			cmd = exec.Command("kubectl", "delete", "ocisecuritypolicy", "ocisecuritypolicy-sample")
+			_, err = utils.Run(cmd)
+			Expect(err).NotTo(HaveOccurred(), "Failed to delete OCISecurityPolicy")
+
+			By("waiting for OCIInstance to be fully deleted")
+			verifyInstanceDeleted := func(g Gomega) {
+				cmd := exec.Command("kubectl", "get", "ociinstance", "ociinstance-sample")
+				_, err := utils.Run(cmd)
+				g.Expect(err).To(HaveOccurred(),
+					"OCIInstance should have been deleted")
+			}
+			Eventually(verifyInstanceDeleted, 2*time.Minute, time.Second).Should(Succeed())
+
+			By("waiting for OCISecurityPolicy to be fully deleted")
+			verifyPolicyDeleted := func(g Gomega) {
+				cmd := exec.Command("kubectl", "get", "ocisecuritypolicy", "ocisecuritypolicy-sample")
+				_, err := utils.Run(cmd)
+				g.Expect(err).To(HaveOccurred(),
+					"OCISecurityPolicy should have been deleted")
+			}
+			Eventually(verifyPolicyDeleted, 2*time.Minute, time.Second).Should(Succeed())
+
+			By("verifying controller logs show deletion activity")
+			verifyDeletionLogs := func(g Gomega) {
+				cmd := exec.Command("kubectl", "logs", controllerPodName, "-n", namespace)
+				output, err := utils.Run(cmd)
+				g.Expect(err).NotTo(HaveOccurred())
+				g.Expect(output).To(ContainSubstring("Removing finalizer"),
+					"Controller should have removed finalizers during deletion")
+			}
+			Eventually(verifyDeletionLogs, 2*time.Minute, time.Second).Should(Succeed())
+		})
 	})
 })
 

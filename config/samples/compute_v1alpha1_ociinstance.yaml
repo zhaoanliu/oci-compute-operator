@@ -5,5 +5,14 @@ metadata:
     app.kubernetes.io/name: oci-compute-operator
     app.kubernetes.io/managed-by: kustomize
   name: ociinstance-sample
+  namespace: default
 spec:
-  # TODO(user): Add fields here
+  compartmentId: "ocid1.compartment.oc1..test"
+  displayName: "e2e-test-instance"
+  shape: "VM.Standard.E2.1.Micro"
+  imageId: "ocid1.image.oc1..test"
+  availabilityDomain: "AD-1"
+  subnetId: "ocid1.subnet.oc1..test"
+  freeformTags:
+    env: "e2e"
+    team: "nvcne"
